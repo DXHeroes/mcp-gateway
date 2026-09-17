@@ -1,0 +1,39 @@
+DXH Gateway CE Distribution Terms
+Version 2026-09-17.1
+Copyright 2026 DX Heroes. All rights reserved.
+
+Permission is granted, free of charge, to download and run the official DXH
+Gateway Community Edition container image for internal production use by a
+company with no more than 50 employees, counting employees of companies under
+common control, controlling it, or controlled by it together. Companies of any
+size may use CE without charge for nonproduction evaluation and testing.
+Nonproduction use does not include serving live business workflows.
+
+The administrator must confirm these terms and select eligible production use
+or nonproduction evaluation at installation. No online activation is required.
+CE allows at most 25 active user accounts across the installation, one
+organization, one saved REST/OpenAPI connection (including a disabled connection)
+and one active gateway process. All user roles count. There is no commercial
+quota on MCP connections, profiles or tool calls. Operational and security
+audit history is available for at most seven days.
+
+Support consists of documentation and community issue reporting. Security fixes,
+image signatures and software bills of materials are available for CE releases.
+
+You may keep backups and copies in private registries for your organization.
+Public redistribution, sublicensing, resale or providing the product to third
+parties as a hosted or managed service requires a separate written agreement
+with DX Heroes. The service source code remains private and is not licensed
+for redistribution under these distribution terms. Do not circumvent edition
+or license controls or remove copyright and licensing notices.
+
+Third-party components retain their own licenses and rights. These terms do
+not change rights already granted for earlier versions under Elastic License
+2.0 or any other license, or rights that cannot lawfully be excluded.
+
+Except as separately agreed in writing, the software is provided AS IS, without
+warranty of any kind, including merchantability, fitness for a particular
+purpose and noninfringement. To the extent permitted by law, DX Heroes is not
+liable for claims or damages arising from use of the software.
+
+Questions and additional permissions: hello@dxheroes.io

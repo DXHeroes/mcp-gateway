@@ -1,0 +1,129 @@
+{{- if not (has .Values.edition (list "ce" "ee")) -}}
+{{- fail "edition must be ce or ee and match the image" -}}
+{{- end -}}
+{{- if and (eq .Values.edition "ce") (or (ne (int .Values.replicaCount) 1) .Values.autoscaling.enabled) -}}
+{{- fail "CE requires replicaCount=1 and autoscaling.enabled=false" -}}
+{{- end -}}
+{{- include "local-mcp-gateway.validateRouting" . -}}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "local-mcp-gateway.fullname" . }}
+  labels:
+    {{- include "local-mcp-gateway.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+spec:
+  {{- if eq .Values.edition "ce" }}
+  strategy:
+    type: Recreate
+  {{- end }}
+  {{- if not .Values.autoscaling.enabled }}
+  replicas: {{ .Values.replicaCount }}
+  {{- end }}
+  selector:
+    matchLabels:
+      {{- include "local-mcp-gateway.selectorLabels" . | nindent 6 }}
+  template:
+    metadata:
+      annotations:
+        # Roll pods when non-secret config changes.
+        checksum/config: {{ include (print $.Template.BasePath "/configmap.yaml") . | sha256sum }}
+        {{- with .Values.podAnnotations }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      labels:
+        {{- include "local-mcp-gateway.selectorLabels" . | nindent 8 }}
+        {{- with .Values.podLabels }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+    spec:
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      serviceAccountName: {{ include "local-mcp-gateway.serviceAccountName" . }}
+      automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: {{ .Chart.Name }}
+          image: {{ include "local-mcp-gateway.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          {{- if and .Values.migrations.runAsHook (eq .Values.edition "ee") }}
+          # Migrations run in a pre-install/pre-upgrade hook Job, so the app pod
+          # bypasses the migrating entrypoint and starts node directly.
+          command: ["node", "dist/main.js"]
+          workingDir: /app/apps/backend
+          {{- end }}
+          ports:
+            - name: http
+              containerPort: 3001
+              protocol: TCP
+          envFrom:
+            - configMapRef:
+                name: {{ include "local-mcp-gateway.fullname" . }}-config
+            {{- if include "local-mcp-gateway.usesSecret" . }}
+            - secretRef:
+                name: {{ include "local-mcp-gateway.secretName" . }}
+            {{- end }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- with .Values.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.livenessProbe }}
+          livenessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.readinessProbe }}
+          readinessProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.startupProbe }}
+          startupProbe:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: home
+              mountPath: {{ .Values.writableVolumes.home.mountPath }}
+            - name: tmp
+              mountPath: {{ .Values.writableVolumes.tmp.mountPath }}
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+      volumes:
+        # readOnlyRootFilesystem is true, so all writable paths are emptyDir.
+        - name: home
+          emptyDir:
+            sizeLimit: {{ .Values.writableVolumes.home.sizeLimit }}
+        - name: tmp
+          emptyDir:
+            sizeLimit: {{ .Values.writableVolumes.tmp.sizeLimit }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.affinity }}
+      affinity:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.topologySpreadConstraints }}
+      topologySpreadConstraints:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}

@@ -1,0 +1,45 @@
+DXH Gateway EE Distribution Terms
+Version 2026-09-17.1
+Copyright 2026 DX Heroes. All rights reserved.
+
+Running the official DXH Gateway Enterprise Edition container image requires
+a separately issued, signed offline license and the applicable agreement with
+DX Heroes. The license identifies the customer, paid or trial type, validity
+period and active-user limit. A null user limit means unlimited users. Trial
+licenses are issued individually; their signed expiry defines trial duration.
+Paid and trial licenses enable the same EE product features.
+
+All active local accounts and verified external identities consume seats across
+the installation. External identities are distinct by verified issuer and
+subject; identities are not merged by email. All roles count. Sessions and
+user-owned keys do not consume additional seats. Deactivation frees a seat
+and denies that identity access.
+
+Both paid and trial licenses retain full functionality for 30 days after expiry.
+After that period, existing operation, login, credential renewal, exports and
+security restrictions/revocations continue. Creating users, connections or
+profiles, widening permissions and other configuration changes are restricted.
+Renewal removes these restrictions without deleting data. The installation
+does not convert to CE automatically.
+
+Paid EE includes standard support and product onboarding. An SLA, if any, is
+agreed separately. Individual written agreements remain controlling; these
+terms do not introduce new prices or alter negotiated unlimited-user terms.
+
+You may keep backups and copies in private registries for your organization.
+Public redistribution, sublicensing, resale or providing the product to third
+parties as a hosted or managed service requires a separate written agreement
+with DX Heroes. The service source code remains private and is not licensed
+for redistribution under these distribution terms. Do not circumvent edition
+or license controls or remove copyright and licensing notices.
+
+Third-party components retain their own licenses and rights. These terms do
+not change rights already granted for earlier versions under Elastic License
+2.0 or any other license, or rights that cannot lawfully be excluded.
+
+Except as separately agreed in writing, the software is provided AS IS, without
+warranty of any kind, including merchantability, fitness for a particular
+purpose and noninfringement. To the extent permitted by law, DX Heroes is not
+liable for claims or damages arising from use of the software.
+
+Questions and additional permissions: hello@dxheroes.io

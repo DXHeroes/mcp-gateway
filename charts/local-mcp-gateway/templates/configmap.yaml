@@ -1,0 +1,154 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  {{- with .Values.config.ceTermsAccepted }}
+  GATEWAY_CE_TERMS_ACCEPTED: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.ceUse }}
+  GATEWAY_CE_USE: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.licenseFile }}
+  GATEWAY_LICENSE_FILE: {{ . | quote }}
+  {{- end }}
+  name: {{ include "local-mcp-gateway.fullname" . }}-config
+  labels:
+    {{- include "local-mcp-gateway.labels" . | nindent 4 }}
+  {{- with .Values.commonAnnotations }}
+  annotations:
+    {{- toYaml . | nindent 4 }}
+  {{- end }}
+data:
+  {{- /* Only emit keys that are set, so unset values don't override image defaults. */}}
+  {{- with .Values.config.betterAuthUrl }}
+  BETTER_AUTH_URL: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.frontendUrl }}
+  FRONTEND_URL: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.corsOrigins }}
+  CORS_ORIGINS: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.logLevel }}
+  LOG_LEVEL: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.authEmailPassword }}
+  AUTH_EMAIL_PASSWORD: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.authSignupMode }}
+  AUTH_SIGNUP_MODE: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.tenancyMode }}
+  TENANCY_MODE: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.googleClientId }}
+  GOOGLE_CLIENT_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.microsoftClientId }}
+  MICROSOFT_CLIENT_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.microsoftTenantId }}
+  MICROSOFT_TENANT_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.adfsIssuer }}
+  ADFS_ISSUER: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.adfsClientId }}
+  ADFS_CLIENT_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.adfsDiscoveryUrl }}
+  ADFS_DISCOVERY_URL: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.adfsScopes }}
+  ADFS_SCOPES: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.adfsDisplayName }}
+  ADFS_DISPLAY_NAME: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.ssoRoleMappingProviders }}
+  SSO_ROLE_MAPPING_PROVIDERS: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.ssoGroupRoleMapping }}
+  SSO_GROUP_ROLE_MAPPING: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.ssoDefaultRole }}
+  SSO_DEFAULT_ROLE: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.ssoGroupsClaim }}
+  SSO_GROUPS_CLAIM: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.mcpAllowPrivateNetworkTargets }}
+  MCP_ALLOW_PRIVATE_NETWORK_TARGETS: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.resendFrom }}
+  RESEND_FROM: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.otelExporterOtlpEndpoint }}
+  OTEL_EXPORTER_OTLP_ENDPOINT: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.otelServiceName }}
+  OTEL_SERVICE_NAME: {{ . | quote }}
+  {{- end }}
+  {{- /* External JWT auth (resource-server mode) — docs/deployment/external-jwt-auth.md.
+        RFC 7662 client credentials belong in the Secret, not here. */}}
+  {{- with .Values.config.externalJwt }}
+  {{- with .enabled }}
+  MCP_EXTERNAL_JWT_ENABLED: {{ . | quote }}
+  {{- end }}
+  {{- with .jwksUrl }}
+  MCP_EXTERNAL_JWT_JWKS_URL: {{ . | quote }}
+  {{- end }}
+  {{- with .discoveryUrl }}
+  MCP_EXTERNAL_JWT_DISCOVERY_URL: {{ . | quote }}
+  {{- end }}
+  {{- with .trustedIssuers }}
+  MCP_EXTERNAL_JWT_TRUSTED_ISSUERS: {{ . | quote }}
+  {{- end }}
+  {{- with .audiences }}
+  MCP_EXTERNAL_JWT_AUDIENCES: {{ . | quote }}
+  {{- end }}
+  {{- with .clockToleranceSeconds }}
+  MCP_EXTERNAL_JWT_CLOCK_TOLERANCE_SECONDS: {{ . | quote }}
+  {{- end }}
+  {{- with .tokenHeader }}
+  MCP_EXTERNAL_JWT_TOKEN_HEADER: {{ . | quote }}
+  {{- end }}
+  {{- with .orgSlug }}
+  MCP_EXTERNAL_JWT_ORG_SLUG: {{ . | quote }}
+  {{- end }}
+  {{- with .subjectClaim }}
+  MCP_EXTERNAL_JWT_SUBJECT_CLAIM: {{ . | quote }}
+  {{- end }}
+  {{- with .clientIdClaim }}
+  MCP_EXTERNAL_JWT_CLIENT_ID_CLAIM: {{ . | quote }}
+  {{- end }}
+  {{- with .scopesClaim }}
+  MCP_EXTERNAL_JWT_SCOPES_CLAIM: {{ . | quote }}
+  {{- end }}
+  {{- with .rolesClaim }}
+  MCP_EXTERNAL_JWT_ROLES_CLAIM: {{ . | quote }}
+  {{- end }}
+  {{- with .roleSource }}
+  MCP_EXTERNAL_JWT_ROLE_SOURCE: {{ . | quote }}
+  {{- end }}
+  {{- with .roleHttpUrl }}
+  MCP_EXTERNAL_JWT_ROLE_HTTP_URL: {{ . | quote }}
+  {{- end }}
+  {{- with .roleHttpBodyTemplate }}
+  MCP_EXTERNAL_JWT_ROLE_HTTP_BODY_TEMPLATE: {{ . | quote }}
+  {{- end }}
+  {{- with .roleHttpHeaders }}
+  MCP_EXTERNAL_JWT_ROLE_HTTP_HEADERS: {{ . | quote }}
+  {{- end }}
+  {{- with .roleHttpActivePath }}
+  MCP_EXTERNAL_JWT_ROLE_HTTP_ACTIVE_PATH: {{ . | quote }}
+  {{- end }}
+  {{- with .roleHttpRolesPath }}
+  MCP_EXTERNAL_JWT_ROLE_HTTP_ROLES_PATH: {{ . | quote }}
+  {{- end }}
+  {{- with .roleHttpTimeoutMs }}
+  MCP_EXTERNAL_JWT_ROLE_HTTP_TIMEOUT_MS: {{ . | quote }}
+  {{- end }}
+  {{- with .rolesCacheTtlSeconds }}
+  MCP_EXTERNAL_JWT_ROLES_CACHE_TTL_SECONDS: {{ . | quote }}
+  {{- end }}
+  {{- end }}

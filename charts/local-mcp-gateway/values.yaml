@@ -1,0 +1,309 @@
+# -- Artifact edition. Must match the immutable image (never a runtime unlock).
+edition: ce
+
+# Default values for local-mcp-gateway.
+# Every value here is overridable without forking templates.
+# Two target profiles are expected: a bank on OpenShift (restricted-v2, internal
+# registry, existingSecret/Vault) and a regular company on vanilla Kubernetes.
+
+# -- Number of application replicas. Note: the in-app rate limiter is in-memory
+# per pod, so with >1 replica throttling is per-pod (documented, acceptable).
+# IMPORTANT: inbound MCP sessions (Mcp-Session-Id) are also held in memory per
+# pod. Running >1 replica REQUIRES sticky routing at the Route/Ingress layer or
+# sessions break with 404 on mis-routed requests. See
+# docs/deployment/kubernetes-openshift.md "Scaling and MCP sessions". Keep at 1
+# unless you have configured sticky sessions.
+replicaCount: 1
+
+image:
+  # Override registry to the bank's internal registry, e.g. registry.bank.internal
+  registry: ghcr.io
+  repository: dxheroes/mcp-gateway-ce
+  # Used only when `digest` is empty. It defaults to the unified chart appVersion.
+  # Production should pin `digest` from release.json.
+  tag: ""
+  # Immutable digest (sha256:...). Takes precedence over `tag` when set — required
+  # for production / air-gapped deployments.
+  digest: ""
+  pullPolicy: IfNotPresent
+
+# Secrets for pulling the image from a private registry.
+imagePullSecrets: []
+  # - name: bank-registry-pull
+
+nameOverride: ""
+fullnameOverride: ""
+
+serviceAccount:
+  create: true
+  name: ""
+  annotations: {}
+  # The app makes no Kubernetes API calls (verified from source), so it needs no
+  # token mounted. Keep this false unless something genuinely needs the API.
+  automountServiceAccountToken: false
+
+# Extra labels/annotations applied to all resources.
+commonLabels: {}
+commonAnnotations: {}
+
+podAnnotations: {}
+podLabels: {}
+
+# -- Pod-level security context. Compatible with OpenShift restricted-v2:
+# runAsUser / fsGroup are intentionally NOT set so OpenShift can assign a UID
+# from the namespace range. On vanilla Kubernetes set runAsUser/fsGroup below.
+podSecurityContext:
+  runAsNonRoot: true
+  seccompProfile:
+    type: RuntimeDefault
+  # runAsUser: 1001
+  # fsGroup: 1001
+
+# -- Container-level security context. Bank-grade, passes restricted-v2.
+securityContext:
+  runAsNonRoot: true
+  allowPrivilegeEscalation: false
+  readOnlyRootFilesystem: true
+  capabilities:
+    drop:
+      - ALL
+  seccompProfile:
+    type: RuntimeDefault
+
+# -- Writable ephemeral mounts required because readOnlyRootFilesystem is true.
+# HOME and /tmp provide bounded application scratch for arbitrary UIDs.
+# Connector processes and their package managers live in separate images.
+writableVolumes:
+  home:
+    mountPath: /home/app
+    sizeLimit: 1Gi
+  tmp:
+    mountPath: /tmp
+    sizeLimit: 512Mi
+
+service:
+  type: ClusterIP
+  port: 3001
+
+# -- OpenShift Route (default ingress mechanism on OpenShift).
+route:
+  enabled: true
+  host: ""
+  # TLS termination on the router (default). Alternatives: reencrypt | passthrough
+  # (would require a serving cert in the app — not implemented yet).
+  tls:
+    enabled: true
+    termination: edge
+    insecureEdgeTerminationPolicy: Redirect
+  annotations: {}
+
+# -- Plain Kubernetes Ingress (alternative to Route, e.g. on non-OpenShift).
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: Prefix
+  tls: []
+
+# -- Non-secret configuration rendered into a ConfigMap and injected as env.
+# Leave a value empty to omit it. Nothing here is baked into the image, so the
+# bank and the company can each set what they need (auth methods, OIDC, etc.).
+config:
+  # -- Read licenses/DXH-Gateway-CE.txt, then set version 2026-09-17.1.
+  ceTermsAccepted: ""
+  # -- production (eligible <=50 employees including affiliates) or evaluation.
+  ceUse: ""
+  # -- EE license file path; mount its parent directory using extraVolumes.
+  licenseFile: ""
+  # Public URLs. Required for correct auth redirects and invitation links.
+  betterAuthUrl: ""
+  frontendUrl: ""
+  corsOrigins: ""
+  logLevel: ""
+  # Auth method toggles (Better Auth). Switchable per customer.
+  authEmailPassword: "" # "false" to disable email/password login
+  # Gates new-account creation for BOTH email/password and SSO (Google/Microsoft/ADFS).
+  authSignupMode: "" # open | invite_only | closed
+  # Tenancy. Decide this before first boot: the mode is recorded in the database
+  # the first time the gateway starts, and there is no override variable.
+  # Narrowing later is the direction that can be foreclosed — booting
+  # single_tenant against a database that already holds more than one
+  # organization fails fast at startup, and there is no merge tool. Widening
+  # back (single_tenant, then multi_tenant again) IS allowed; the backend logs
+  # it at error level and writes a `tenancy_mode_changed` security-audit entry.
+  tenancyMode: "" # multi_tenant (default) | single_tenant
+  # OAuth / OIDC public identifiers (the matching client secrets go in the Secret).
+  googleClientId: ""
+  microsoftClientId: ""
+  microsoftTenantId: ""
+  # On-prem ADFS login (docs/deployment/adfs-login.md); ADFS_CLIENT_SECRET goes in the Secret.
+  adfsIssuer: "" # e.g. https://fs.example.com/adfs
+  adfsClientId: ""
+  adfsDiscoveryUrl: "" # override; defaults to {adfsIssuer}/.well-known/openid-configuration
+  adfsScopes: "" # default: openid profile email allatclaims
+  adfsDisplayName: "" # login button label, e.g. "Contoso SSO"
+  # SSO group->role mapping (owner never assigned/touched; re-synced every login).
+  ssoRoleMappingProviders: "" # e.g. "adfs" or "microsoft"
+  ssoGroupRoleMapping: "" # e.g. "MCP-GW-Admins:admin,MCP-GW-Users:member"
+  ssoDefaultRole: "" # default: member
+  ssoGroupsClaim: "" # default: groups
+  # Outbound MCP network policy. Private-network MCP targets (loopback,
+  # RFC 1918, CGNAT, ULA) are allowed by default - internal servers are the
+  # primary self-hosted use case. Set "false" to block them (SSRF hardening);
+  # link-local/metadata and unspecified addresses are always blocked.
+  mcpAllowPrivateNetworkTargets: "" # "false" to block private/internal MCP targets
+  # Email (Resend) sender; the API key goes in the Secret.
+  resendFrom: ""
+  # OpenTelemetry (global export). Endpoint + service name only.
+  otelExporterOtlpEndpoint: ""
+  otelServiceName: ""
+  # External JWT auth (resource-server mode) on the MCP proxy endpoints:
+  # accept access tokens issued by a corporate IdP (ADFS, Entra ID, Keycloak, …),
+  # verified locally against the IdP JWKS. See docs/deployment/external-jwt-auth.md.
+  # RFC 7662 introspection credentials go in the Secret
+  # (MCP_EXTERNAL_JWT_ROLE_RFC7662_CLIENT_ID/_SECRET).
+  externalJwt:
+    enabled: "" # "true" to enable
+    jwksUrl: "" # e.g. https://fs.example.com/adfs/discovery/keys
+    discoveryUrl: "" # alternative to jwksUrl (OIDC discovery); issuer is NEVER taken from it
+    trustedIssuers: "" # comma-separated, e.g. http://fs.example.com/adfs/services/trust
+    audiences: "" # comma-separated resource identifiers, e.g. urn:corp:mcp-gateway:prod
+    clockToleranceSeconds: "" # default: 60
+    tokenHeader: "" # extra header to read the token from (API gateway in front)
+    orgSlug: "" # org for the non-org-scoped /api/mcp/gateway route
+    subjectClaim: "" # default: sub
+    clientIdClaim: "" # default: azp,appid,client_id
+    scopesClaim: "" # default: scp,scope
+    rolesClaim: "" # default: roles,groups
+    roleSource: "" # claim | rfc7662 | http-json | claim-then-remote (default: claim)
+    roleHttpUrl: "" # role/introspection endpoint for remote role sources
+    roleHttpBodyTemplate: "" # http-json body; default {"token":"{{token}}"}
+    roleHttpHeaders: "" # static headers as JSON object
+    roleHttpActivePath: "" # JSON path to the active flag (http-json; deny when false)
+    roleHttpRolesPath: "" # JSON path to the roles array; default: roles
+    roleHttpTimeoutMs: "" # default: 5000
+    rolesCacheTtlSeconds: "" # default: 300
+
+# -- Secrets. Production: reference an existing Secret (Vault / External Secrets
+# Operator). The Secret's keys must be named after the env vars the app reads:
+#   GATEWAY_ENCRYPTION_KEY (required, immutable — rotating it invalidates stored
+#   tokens/API keys), DATABASE_URL, BETTER_AUTH_SECRET, and optionally
+#   GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_SECRET, ADFS_CLIENT_SECRET, RESEND_API_KEY,
+#   MCP_EXTERNAL_JWT_ROLE_RFC7662_CLIENT_ID / MCP_EXTERNAL_JWT_ROLE_RFC7662_CLIENT_SECRET.
+secret:
+  # Name of a pre-existing Secret. Takes precedence over `create`.
+  existingSecret: ""
+  # Dev/kind only: let the chart render a Secret from `values` below.
+  # Never commit real secrets; intended for throwaway local clusters.
+  create: false
+  values: {}
+    # GATEWAY_ENCRYPTION_KEY: ""
+    # DATABASE_URL: ""
+    # BETTER_AUTH_SECRET: ""
+
+# -- Arbitrary extra env vars / sources, escape hatch for per-customer needs.
+extraEnv: []
+  # - name: SOME_FLAG
+  #   value: "true"
+extraEnvFrom: []
+  # - configMapRef:
+  #     name: my-extra-config
+
+# -- Extra volumes / mounts, e.g. an internal CA bundle for on-prem IdPs
+# (pair with extraEnv NODE_EXTRA_CA_CERTS — see docs/deployment/adfs-login.md).
+extraVolumes: []
+  # - name: internal-ca
+  #   configMap:
+  #     name: internal-ca-bundle
+extraVolumeMounts: []
+  # - name: internal-ca
+  #   mountPath: /etc/gateway/ca
+  #   readOnly: true
+
+resources:
+  requests:
+    cpu: 100m
+    memory: 256Mi
+  limits:
+    cpu: "1"
+    memory: 1Gi
+
+# -- Probes. Liveness is DB-independent; readiness fails (503) when the DB is
+# down; startup probe gives a generous window for cold start + DB migrations.
+livenessProbe:
+  httpGet:
+    path: /api/health
+    port: http
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+readinessProbe:
+  httpGet:
+    path: /api/health/ready
+    port: http
+  initialDelaySeconds: 0
+  periodSeconds: 10
+  timeoutSeconds: 5
+  failureThreshold: 3
+startupProbe:
+  httpGet:
+    path: /api/health
+    port: http
+  periodSeconds: 5
+  timeoutSeconds: 5
+  # 5s * 60 = up to 5 minutes for migrations + MCP discovery on first boot.
+  failureThreshold: 60
+
+# -- PodDisruptionBudget (enabled when replicaCount > 1 is sensible).
+# WARNING: minAvailable: 1 with replicaCount: 1 blocks all voluntary disruptions
+# (node drains, Helm upgrades). Only enable when replicaCount >= 2.
+pdb:
+  enabled: false
+  minAvailable: 1
+  # maxUnavailable: 1
+
+# -- Horizontal Pod Autoscaler (optional). WARNING: scaling out breaks in-memory
+# MCP sessions unless sticky routing is configured at the Route/Ingress layer —
+# see docs/deployment/kubernetes-openshift.md "Scaling and MCP sessions". Leave
+# disabled unless you have sticky sessions in place.
+autoscaling:
+  enabled: false
+  minReplicas: 1
+  maxReplicas: 5
+  targetCPUUtilizationPercentage: 80
+  # targetMemoryUtilizationPercentage: 80
+
+# -- NetworkPolicy. Opt-in: default off because added MCP servers may need to
+# reach the internet at runtime. When enabled, it default-denies and allows only
+# the rules below (customer fills in real CIDRs).
+networkPolicy:
+  enabled: false
+  # Ingress from the OpenShift router / ingress controller namespace.
+  ingressNamespaceSelector: {}
+  egress:
+    # Allow DNS resolution.
+    allowDNS: true
+    # Extra egress rules appended verbatim (e.g. DB, OIDC issuer, MCP targets).
+    extraRules: []
+
+# -- Database migrations. true: run as a pre-install/pre-upgrade Helm hook Job
+# (recommended for >1 replica — avoids every pod racing to migrate). The app
+# pods then skip migrations. false: migrations run from the container entrypoint.
+migrations:
+  runAsHook: true
+  # backoffLimit for the migration Job.
+  backoffLimit: 3
+  # Hard deadline (seconds) for the migration Job. Prevents a hung migration
+  # (e.g. DB unreachable without a fast TCP error) from blocking helm install/upgrade
+  # indefinitely. 300s (5 min) covers normal cold-start + slow DB handshakes.
+  activeDeadlineSeconds: 300
+
+nodeSelector: {}
+tolerations: []
+affinity: {}
+topologySpreadConstraints: []

@@ -1,0 +1,234 @@
+{
+  "$schema": "https://json-schema.org/draft-07/schema#",
+  "title": "local-mcp-gateway values",
+  "type": "object",
+  "properties": {
+    "global": { "type": "object" },
+    "edition": { "type": "string", "enum": ["ce", "ee"] },
+    "replicaCount": { "type": "integer", "minimum": 0 },
+    "image": {
+      "type": "object",
+      "properties": {
+        "registry": { "type": "string" },
+        "repository": { "type": "string", "minLength": 1 },
+        "tag": { "type": "string" },
+        "digest": { "type": "string", "pattern": "^(sha256:[a-f0-9]{64})?$" },
+        "pullPolicy": { "type": "string", "enum": ["Always", "IfNotPresent", "Never"] }
+      },
+      "required": ["repository"],
+      "additionalProperties": false
+    },
+    "imagePullSecrets": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": { "name": { "type": "string" } },
+        "required": ["name"]
+      }
+    },
+    "nameOverride": { "type": "string" },
+    "fullnameOverride": { "type": "string" },
+    "serviceAccount": {
+      "type": "object",
+      "properties": {
+        "create": { "type": "boolean" },
+        "name": { "type": "string" },
+        "annotations": { "type": "object" },
+        "automountServiceAccountToken": { "type": "boolean" }
+      },
+      "additionalProperties": false
+    },
+    "commonLabels": { "type": "object" },
+    "commonAnnotations": { "type": "object" },
+    "podAnnotations": { "type": "object" },
+    "podLabels": { "type": "object" },
+    "podSecurityContext": { "type": "object" },
+    "securityContext": { "type": "object" },
+    "writableVolumes": {
+      "type": "object",
+      "properties": {
+        "home": { "$ref": "#/$defs/writableVolume" },
+        "tmp": { "$ref": "#/$defs/writableVolume" }
+      },
+      "additionalProperties": false
+    },
+    "service": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["ClusterIP", "NodePort", "LoadBalancer"] },
+        "port": { "type": "integer", "minimum": 1, "maximum": 65535 }
+      },
+      "additionalProperties": false
+    },
+    "route": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "host": { "type": "string" },
+        "tls": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "boolean" },
+            "termination": { "type": "string", "enum": ["edge", "passthrough", "reencrypt"] },
+            "insecureEdgeTerminationPolicy": {
+              "type": "string",
+              "enum": ["None", "Allow", "Redirect"]
+            }
+          },
+          "additionalProperties": false
+        },
+        "annotations": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "ingress": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "className": { "type": "string" },
+        "annotations": { "type": "object" },
+        "hosts": { "type": "array" },
+        "tls": { "type": "array" }
+      },
+      "additionalProperties": false
+    },
+    "config": {
+      "type": "object",
+      "properties": {
+        "ceTermsAccepted": { "type": "string" },
+        "ceUse": { "type": "string", "enum": ["", "production", "evaluation"] },
+        "licenseFile": { "type": "string" },
+        "betterAuthUrl": { "type": "string" },
+        "frontendUrl": { "type": "string" },
+        "corsOrigins": { "type": "string" },
+        "logLevel": { "type": "string", "enum": ["", "error", "warn", "info", "debug", "trace"] },
+        "authEmailPassword": { "type": "string" },
+        "authSignupMode": { "type": "string", "enum": ["", "open", "invite_only", "closed"] },
+        "tenancyMode": { "type": "string", "enum": ["", "multi_tenant", "single_tenant"] },
+        "googleClientId": { "type": "string" },
+        "microsoftClientId": { "type": "string" },
+        "microsoftTenantId": { "type": "string" },
+        "adfsIssuer": { "type": "string" },
+        "adfsClientId": { "type": "string" },
+        "adfsDiscoveryUrl": { "type": "string" },
+        "adfsScopes": { "type": "string" },
+        "adfsDisplayName": { "type": "string" },
+        "ssoRoleMappingProviders": { "type": "string" },
+        "ssoGroupRoleMapping": { "type": "string" },
+        "ssoDefaultRole": { "type": "string", "enum": ["", "admin", "member"] },
+        "ssoGroupsClaim": { "type": "string" },
+        "mcpAllowPrivateNetworkTargets": { "type": "string", "enum": ["", "true", "false"] },
+        "resendFrom": { "type": "string" },
+        "otelExporterOtlpEndpoint": { "type": "string" },
+        "otelServiceName": { "type": "string" },
+        "externalJwt": {
+          "type": "object",
+          "properties": {
+            "enabled": { "type": "string", "enum": ["", "true", "false"] },
+            "jwksUrl": { "type": "string" },
+            "discoveryUrl": { "type": "string" },
+            "trustedIssuers": { "type": "string" },
+            "audiences": { "type": "string" },
+            "clockToleranceSeconds": { "type": "string" },
+            "tokenHeader": { "type": "string" },
+            "orgSlug": { "type": "string" },
+            "subjectClaim": { "type": "string" },
+            "clientIdClaim": { "type": "string" },
+            "scopesClaim": { "type": "string" },
+            "rolesClaim": { "type": "string" },
+            "roleSource": {
+              "type": "string",
+              "enum": ["", "claim", "rfc7662", "http-json", "claim-then-remote"]
+            },
+            "roleHttpUrl": { "type": "string" },
+            "roleHttpBodyTemplate": { "type": "string" },
+            "roleHttpHeaders": { "type": "string" },
+            "roleHttpActivePath": { "type": "string" },
+            "roleHttpRolesPath": { "type": "string" },
+            "roleHttpTimeoutMs": { "type": "string" },
+            "rolesCacheTtlSeconds": { "type": "string" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "secret": {
+      "type": "object",
+      "properties": {
+        "existingSecret": { "type": "string" },
+        "create": { "type": "boolean" },
+        "values": { "type": "object" }
+      },
+      "additionalProperties": false
+    },
+    "extraEnv": { "type": "array" },
+    "extraEnvFrom": { "type": "array" },
+    "extraVolumes": { "type": "array" },
+    "extraVolumeMounts": { "type": "array" },
+    "resources": { "type": "object" },
+    "livenessProbe": { "type": "object" },
+    "readinessProbe": { "type": "object" },
+    "startupProbe": { "type": "object" },
+    "pdb": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minAvailable": { "type": ["integer", "string"] },
+        "maxUnavailable": { "type": ["integer", "string"] }
+      },
+      "additionalProperties": false
+    },
+    "autoscaling": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "minReplicas": { "type": "integer", "minimum": 1 },
+        "maxReplicas": { "type": "integer", "minimum": 1 },
+        "targetCPUUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 },
+        "targetMemoryUtilizationPercentage": { "type": "integer", "minimum": 1, "maximum": 100 }
+      },
+      "additionalProperties": false
+    },
+    "networkPolicy": {
+      "type": "object",
+      "properties": {
+        "enabled": { "type": "boolean" },
+        "ingressNamespaceSelector": { "type": "object" },
+        "egress": {
+          "type": "object",
+          "properties": {
+            "allowDNS": { "type": "boolean" },
+            "extraRules": { "type": "array" }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "migrations": {
+      "type": "object",
+      "properties": {
+        "runAsHook": { "type": "boolean" },
+        "backoffLimit": { "type": "integer", "minimum": 0 },
+        "activeDeadlineSeconds": { "type": "integer", "minimum": 30 }
+      },
+      "additionalProperties": false
+    },
+    "nodeSelector": { "type": "object" },
+    "tolerations": { "type": "array" },
+    "affinity": { "type": "object" },
+    "topologySpreadConstraints": { "type": "array" }
+  },
+  "$defs": {
+    "writableVolume": {
+      "type": "object",
+      "properties": {
+        "mountPath": { "type": "string", "minLength": 1 },
+        "sizeLimit": { "type": "string" }
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

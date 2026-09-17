@@ -1,0 +1,93 @@
+{{- if and .Values.migrations.runAsHook (eq .Values.edition "ee") -}}
+{{- /*
+  Run DB migrations once per install/upgrade as a Helm hook, instead of from
+  every pod's entrypoint (which would race with >1 replica). Mirrors the
+  migration steps from docker-entrypoint.sh: prisma migrate deploy, then the
+  row-level data migrations. Needs the same Secret (data migration
+  001_encrypt-existing-secrets uses GATEWAY_ENCRYPTION_KEY) and the same
+  restricted-v2 securityContext + writable emptyDir mounts.
+*/ -}}
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ include "local-mcp-gateway.fullname" . }}-migrate
+  labels:
+    {{- include "local-mcp-gateway.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-5"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- with .Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  backoffLimit: {{ .Values.migrations.backoffLimit }}
+  # Bound the worst-case hook duration so a hung migration (DB unreachable with no
+  # fast error) doesn't block helm install/upgrade indefinitely.
+  activeDeadlineSeconds: {{ .Values.migrations.activeDeadlineSeconds }}
+  template:
+    metadata:
+      labels:
+        {{- include "local-mcp-gateway.selectorLabels" . | nindent 8 }}
+        app.kubernetes.io/component: migrate
+    spec:
+      restartPolicy: Never
+      {{- with .Values.imagePullSecrets }}
+      imagePullSecrets:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      # Use the namespace default ServiceAccount: this Job is a pre-install/
+      # pre-upgrade hook that runs BEFORE the chart's ServiceAccount is created,
+      # and migrations need no Kubernetes API access anyway. Token stays unmounted.
+      serviceAccountName: default
+      automountServiceAccountToken: false
+      securityContext:
+        {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      containers:
+        - name: migrate
+          image: {{ include "local-mcp-gateway.image" . }}
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          securityContext:
+            {{- toYaml .Values.securityContext | nindent 12 }}
+          workingDir: /app/apps/backend
+          command: ["node", "dist/main.js", "--edition-migrate"]
+          # Migrations need only DB creds + GATEWAY_ENCRYPTION_KEY (from the
+          # Secret), so the ConfigMap is intentionally NOT referenced — one less
+          # resource that would have to exist during the pre-install hook phase.
+          {{- if or (include "local-mcp-gateway.usesSecret" .) .Values.extraEnvFrom }}
+          envFrom:
+            {{- if include "local-mcp-gateway.usesSecret" . }}
+            - secretRef:
+                name: {{ include "local-mcp-gateway.secretName" . }}
+            {{- end }}
+            {{- with .Values.extraEnvFrom }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
+          {{- end }}
+          {{- with .Values.extraEnv }}
+          env:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          resources:
+            {{- toYaml .Values.resources | nindent 12 }}
+          volumeMounts:
+            - name: home
+              mountPath: {{ .Values.writableVolumes.home.mountPath }}
+            - name: tmp
+              mountPath: {{ .Values.writableVolumes.tmp.mountPath }}
+      volumes:
+        - name: home
+          emptyDir:
+            sizeLimit: {{ .Values.writableVolumes.home.sizeLimit }}
+        - name: tmp
+          emptyDir:
+            sizeLimit: {{ .Values.writableVolumes.tmp.sizeLimit }}
+      {{- with .Values.nodeSelector }}
+      nodeSelector:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      {{- with .Values.tolerations }}
+      tolerations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+{{- end }}

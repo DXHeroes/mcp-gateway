@@ -1,0 +1,11 @@
+{
+  "name": "mcp-gateway",
+  "version": "0.2.0",
+  "description": "Assisted DXH MCP Gateway installation and administration.",
+  "author": {
+    "name": "DX Heroes",
+    "email": "prokop.simek@dxheroes.io"
+  },
+  "license": "Apache-2.0",
+  "keywords": ["mcp", "gateway", "self-hosted", "administration"]
+}

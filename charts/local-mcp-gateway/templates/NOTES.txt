@@ -1,0 +1,60 @@
+{{ .Chart.Name }} {{ .Chart.AppVersion }} has been deployed as release "{{ .Release.Name }}".
+
+1. Endpoint
+{{- if .Values.route.enabled }}
+   OpenShift Route:
+     oc -n {{ .Release.Namespace }} get route {{ include "local-mcp-gateway.fullname" . }} -o jsonpath='{.spec.host}{"\n"}'
+   {{- if .Values.route.host }}
+   Configured host: http{{ if .Values.route.tls.enabled }}s{{ end }}://{{ .Values.route.host }}
+   {{- end }}
+{{- else if .Values.ingress.enabled }}
+   Ingress hosts:
+   {{- range .Values.ingress.hosts }}
+     - {{ .host }}
+   {{- end }}
+{{- else }}
+   No Route/Ingress enabled. Reach the Service via port-forward:
+     kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "local-mcp-gateway.fullname" . }} 3001:{{ .Values.service.port }}
+{{- end }}
+
+2. Verify health
+   kubectl (or oc) -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }}
+   Liveness:  GET /api/health        (DB-independent, always 200 when up)
+   Readiness: GET /api/health/ready   (503 while the database is unreachable)
+
+3. Secrets
+{{- if .Values.secret.existingSecret }}
+   Using existing Secret: {{ .Values.secret.existingSecret }}
+{{- else if .Values.secret.create }}
+   WARNING: a chart-managed Secret is in use (secret.create=true). This is for
+   dev/kind only. In production reference an external Secret via secret.existingSecret
+   (Vault / External Secrets Operator).
+{{- else }}
+   No Secret wired in. The app needs at least GATEWAY_ENCRYPTION_KEY and DATABASE_URL.
+   Set secret.existingSecret (production) or secret.create=true (dev).
+{{- end }}
+
+   IMPORTANT: GATEWAY_ENCRYPTION_KEY is immutable. Rotating it invalidates every
+   stored OAuth token and API key. Keep it stable across upgrades.
+
+   NOTE: rotating any other Secret key (e.g. BETTER_AUTH_SECRET) requires a manual
+   pod rollout — Secret changes do not trigger automatic rolling restarts:
+     kubectl (or oc) -n {{ .Release.Namespace }} rollout restart deployment/{{ include "local-mcp-gateway.fullname" . }}
+
+{{- if and (gt (int .Values.replicaCount) 1) (not .Values.migrations.runAsHook) }}
+
+4. WARNING: replicaCount > 1 with migrations.runAsHook=false means every pod runs
+   migrations at startup and may race. Set migrations.runAsHook=true.
+{{- end }}
+{{- if .Values.networkPolicy.enabled }}
+
+5. WARNING: NetworkPolicy is enabled.
+   - Egress is default-denied except DNS. The app will NOT reach its database (or
+     OIDC issuer / MCP targets) until you add matching rules under
+     networkPolicy.egress.extraRules.
+{{- if not .Values.networkPolicy.ingressNamespaceSelector }}
+   - networkPolicy.ingressNamespaceSelector is not set: ingress is allowed from ANY
+     namespace. Set it to the router/ingress namespace for a tighter posture, e.g.:
+       networkPolicy.ingressNamespaceSelector.matchLabels."kubernetes.io/metadata.name"=openshift-ingress
+{{- end }}
+{{- end }}

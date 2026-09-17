@@ -1,0 +1,10 @@
+{
+  "edition": "ce",
+  "version": "v0.2.0",
+  "image": "ghcr.io/dxheroes/mcp-gateway-ce",
+  "digest": "sha256:REPLACE_WITH_RELEASE_DIGEST",
+  "platforms": ["linux/amd64", "linux/arm64"],
+  "sourceRevision": "REPLACE_WITH_PRIVATE_SOURCE_SHA",
+  "signingIdentity": "https://github.com/DXHeroes/local-mcp-gateway/.github/workflows/edition-images.yml@refs/heads/main",
+  "termsVersion": "2026-09-17.1"
+}

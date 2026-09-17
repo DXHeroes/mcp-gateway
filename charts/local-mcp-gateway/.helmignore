@@ -1,0 +1,14 @@
+# Patterns to ignore when packaging the chart.
+.DS_Store
+.git/
+.gitignore
+*.tmproj
+*.bak
+*.orig
+*~
+# CI / editor
+.vscode/
+.idea/
+# Local test values must not ship inside the packaged chart
+ci/
+values.local.yaml

@@ -1,0 +1,51 @@
+{{- if .Values.networkPolicy.enabled -}}
+{{- /*
+  Defense-in-depth, opt-in. Default-deny ingress + egress, then allow only:
+  - ingress to the app port from the router/ingress namespace,
+  - DNS egress (optional),
+  - any extra egress rules the customer supplies (DB, OIDC issuer, MCP targets).
+  Treat egress allowlisting as a complement to app-layer SSRF protection, not a
+  replacement. Note: added MCP servers fetching from the internet at runtime
+  require matching egress rules here.
+*/ -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "local-mcp-gateway.fullname" . }}
+  labels:
+    {{- include "local-mcp-gateway.labels" . | nindent 4 }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "local-mcp-gateway.selectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - from:
+        {{- if .Values.networkPolicy.ingressNamespaceSelector }}
+        - namespaceSelector:
+            {{- toYaml .Values.networkPolicy.ingressNamespaceSelector | nindent 12 }}
+        {{- else }}
+        # ingressNamespaceSelector not set: allows ingress from ANY namespace.
+        # Set networkPolicy.ingressNamespaceSelector to restrict to the router/ingress
+        # controller namespace (e.g. matchLabels: {kubernetes.io/metadata.name: openshift-ingress}).
+        - namespaceSelector: {}
+        {{- end }}
+      ports:
+        - protocol: TCP
+          port: 3001
+  egress:
+    {{- if .Values.networkPolicy.egress.allowDNS }}
+    # DNS resolution (kube-dns / CoreDNS).
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- end }}
+    {{- with .Values.networkPolicy.egress.extraRules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+{{- end }}
