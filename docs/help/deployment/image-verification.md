@@ -2,7 +2,7 @@
 
 One reviewed private source revision produces paired CE and EE images with the same Gateway version.
 CE is public at `ghcr.io/dxheroes/mcp-gateway-ce`; EE stays private at
-`docker.io/devdxheroes/mcp-gateway-ee`. Each release index contains native `linux/amd64` and
+`docker.io/dxheroes/mcp-gateway-ee`. Each release index contains native `linux/amd64` and
 `linux/arm64` subjects. The workflow does not publish `latest` or `stable`.
 
 Every native subject is content-audited, exercised as its actual architecture, scanned for fixed

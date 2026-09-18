@@ -13,7 +13,7 @@ Check out a signed public release and verify its `release.json`. Copy `.env.exam
 generate `POSTGRES_PASSWORD` as hex (it becomes part of the database URL) and `BETTER_AUTH_SECRET`
 and `GATEWAY_ENCRYPTION_KEY` as independent secrets with at least 32 random bytes each, set
 `PUBLIC_URL`, and pin `GATEWAY_IMAGE` to the verified digest, for example
-`docker.io/devdxheroes/mcp-gateway-ce@sha256:…` or `ghcr.io/dxheroes/mcp-gateway-ce@sha256:…`.
+`docker.io/dxheroes/mcp-gateway-ce@sha256:…` or `ghcr.io/dxheroes/mcp-gateway-ce@sha256:…`.
 
 Run `docker compose config`, `docker compose pull`, then `docker compose up -d --wait`. The image
 applies database migrations before starting. Open the public URL, register the first owner, then set

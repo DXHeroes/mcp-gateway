@@ -54,7 +54,7 @@ docker run -d --name mcp-gateway-db --network mcp-gateway --restart unless-stopp
   postgres:17-alpine
 docker run -d --name mcp-gateway --network mcp-gateway --restart unless-stopped \
   --env-file gateway.env -p 127.0.0.1:3001:3001 \
-  devdxheroes/mcp-gateway-ce:v0.5.0 # x-release-please-version
+  dxheroes/mcp-gateway-ce:v0.5.0 # x-release-please-version
 ```
 
 The gateway waits for the database and applies migrations itself, so a `connection refused` line
@@ -63,7 +63,7 @@ http://localhost:3001 as above.
 
 ## Image
 
-The CE image is public on Docker Hub as `devdxheroes/mcp-gateway-ce` and on GitHub Container
+The CE image is public on Docker Hub as `dxheroes/mcp-gateway-ce` and on GitHub Container
 Registry as `ghcr.io/dxheroes/mcp-gateway-ce`, with the same tags and digests. Tags are release
 versions such as `v0.5.0`; there is no `latest`, so `docker pull` without a tag fails. <!-- x-release-please-version -->
 
