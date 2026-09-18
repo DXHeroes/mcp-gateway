@@ -1,17 +1,24 @@
+# DXH Gateway Community Edition. Quick start: see README.md.
+# Needs a .env next to this file with POSTGRES_PASSWORD, BETTER_AUTH_SECRET,
+# GATEWAY_ENCRYPTION_KEY and GATEWAY_CE_TERMS_ACCEPTED (see .env.example).
 services:
   gateway:
-    image: ${GATEWAY_IMAGE:?Set a published immutable image digest}
+    # Override with GATEWAY_IMAGE, e.g. ghcr.io/dxheroes/mcp-gateway-ce:<tag> or an image@sha256:… digest.
+    # Coolify stores the default below as the variable's value once; update the image there by
+    # changing GATEWAY_IMAGE.
+    image: ${GATEWAY_IMAGE:-docker.io/devdxheroes/mcp-gateway-ce:v0.5.0} # x-release-please-version
     restart: unless-stopped
     ports:
       - "127.0.0.1:3001:3001"
+    # Required values come from .env (see .env.example). Nothing follows `:?` on purpose: Coolify
+    # stores that text as the variable's value, which would turn these secrets into public strings.
     environment:
-      DATABASE_URL: postgresql://gateway:${POSTGRES_PASSWORD:?Set database password}@postgres:5432/gateway
-      BETTER_AUTH_URL: ${PUBLIC_URL:-http://localhost:3001}
-      FRONTEND_URL: ${PUBLIC_URL:-http://localhost:3001}
-      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?Set an independent random secret}
-      GATEWAY_ENCRYPTION_KEY: ${GATEWAY_ENCRYPTION_KEY:?Set an independent random secret}
-      GATEWAY_CE_TERMS_ACCEPTED: ${GATEWAY_CE_TERMS_ACCEPTED:?Read and accept CE terms version 2026-09-17.1}
-      GATEWAY_CE_USE: ${GATEWAY_CE_USE:?Choose production or evaluation}
+      DATABASE_URL: postgresql://gateway:${POSTGRES_PASSWORD:?}@postgres:5432/gateway
+      PUBLIC_URL: ${PUBLIC_URL:-http://localhost:3001}
+      BETTER_AUTH_SECRET: ${BETTER_AUTH_SECRET:?}
+      GATEWAY_ENCRYPTION_KEY: ${GATEWAY_ENCRYPTION_KEY:?}
+      # Read LICENSE-CE.txt, then accept it with GATEWAY_CE_TERMS_ACCEPTED=2026-09-18.1.
+      GATEWAY_CE_TERMS_ACCEPTED: ${GATEWAY_CE_TERMS_ACCEPTED:?}
       AUTH_SIGNUP_MODE: ${AUTH_SIGNUP_MODE:-open}
     depends_on:
       postgres:
@@ -21,7 +28,7 @@ services:
     restart: unless-stopped
     environment:
       POSTGRES_USER: gateway
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set database password}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?}
       POSTGRES_DB: gateway
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U gateway -d gateway"]

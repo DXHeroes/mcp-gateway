@@ -1,5 +1,5 @@
 DXH Gateway CE Distribution Terms
-Version 2026-09-17.1
+Version 2026-09-18.1
 Copyright 2026 DX Heroes. All rights reserved.
 
 Permission is granted, free of charge, to download and run the official DXH
@@ -9,8 +9,9 @@ common control, controlling it, or controlled by it together. Companies of any
 size may use CE without charge for nonproduction evaluation and testing.
 Nonproduction use does not include serving live business workflows.
 
-The administrator must confirm these terms and select eligible production use
-or nonproduction evaluation at installation. No online activation is required.
+The administrator accepts these terms at installation by setting the accepted
+terms version. Accepting them confirms that the use is eligible under the
+paragraph above. No online activation is required.
 CE allows at most 25 active user accounts across the installation, one
 organization, one saved REST/OpenAPI connection (including a disabled connection)
 and one active gateway process. All user roles count. There is no commercial

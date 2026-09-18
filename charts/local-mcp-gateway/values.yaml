@@ -113,15 +113,19 @@ ingress:
 # Leave a value empty to omit it. Nothing here is baked into the image, so the
 # bank and the company can each set what they need (auth methods, OIDC, etc.).
 config:
-  # -- Read licenses/DXH-Gateway-CE.txt, then set version 2026-09-17.1.
+  # -- Read licenses/DXH-Gateway-CE.txt, then accept it by setting its version, 2026-09-18.1.
   ceTermsAccepted: ""
-  # -- production (eligible <=50 employees including affiliates) or evaluation.
-  ceUse: ""
   # -- EE license file path; mount its parent directory using extraVolumes.
-  licenseFile: ""
-  # Public URLs. Required for correct auth redirects and invitation links.
-  betterAuthUrl: ""
-  frontendUrl: ""
+  # Renders GATEWAY_LICENSE (replaces licenseFile, removed in 0.4.0). To pass the
+  # license content instead of a path, put it in the Secret under the key
+  # GATEWAY_LICENSE (secret.existingSecret) — never here: a ConfigMap is not
+  # secret, and the schema rejects content in this key.
+  license: ""
+  # -- Public address of the gateway, e.g. https://mcp-gateway.apps.bank.internal.
+  # Required for correct auth redirects and invitation links. Replaces the
+  # betterAuthUrl/frontendUrl pair removed in 0.3.0; there is no split UI/API
+  # origin to configure here, because the image serves both from one origin.
+  publicUrl: ""
   corsOrigins: ""
   logLevel: ""
   # Auth method toggles (Better Auth). Switchable per customer.

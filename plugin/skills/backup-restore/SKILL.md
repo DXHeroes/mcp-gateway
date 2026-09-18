@@ -7,7 +7,7 @@ description: Plan and perform a consistent MCP Gateway backup or restore with va
 
 Back up the PostgreSQL database plus the deployment configuration needed to interpret it. Include
 Compose/Helm values, installed image digest, Gateway version and edition, encryption-key reference,
-license-file reference for EE, and externally managed OAuth/SSO configuration references. Never copy
+`GATEWAY_LICENSE` reference for EE, and externally managed OAuth/SSO configuration references. Never copy
 secret values into the report or commit backup material. Database data is unusable without the same
 Gateway encryption key, so confirm its protected backup separately.
 

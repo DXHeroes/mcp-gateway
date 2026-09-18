@@ -1,15 +1,6 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  {{- with .Values.config.ceTermsAccepted }}
-  GATEWAY_CE_TERMS_ACCEPTED: {{ . | quote }}
-  {{- end }}
-  {{- with .Values.config.ceUse }}
-  GATEWAY_CE_USE: {{ . | quote }}
-  {{- end }}
-  {{- with .Values.config.licenseFile }}
-  GATEWAY_LICENSE_FILE: {{ . | quote }}
-  {{- end }}
   name: {{ include "local-mcp-gateway.fullname" . }}-config
   labels:
     {{- include "local-mcp-gateway.labels" . | nindent 4 }}
@@ -19,11 +10,14 @@ metadata:
   {{- end }}
 data:
   {{- /* Only emit keys that are set, so unset values don't override image defaults. */}}
-  {{- with .Values.config.betterAuthUrl }}
-  BETTER_AUTH_URL: {{ . | quote }}
+  {{- with .Values.config.ceTermsAccepted }}
+  GATEWAY_CE_TERMS_ACCEPTED: {{ . | quote }}
   {{- end }}
-  {{- with .Values.config.frontendUrl }}
-  FRONTEND_URL: {{ . | quote }}
+  {{- with .Values.config.license }}
+  GATEWAY_LICENSE: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.publicUrl }}
+  PUBLIC_URL: {{ . | quote }}
   {{- end }}
   {{- with .Values.config.corsOrigins }}
   CORS_ORIGINS: {{ . | quote }}

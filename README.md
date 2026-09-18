@@ -1,34 +1,129 @@
 # DXH Gateway
 
-Self-hosted governance for MCP tools. This repository contains installation materials and public documentation. Service source is private.
+Self-hosted governance for MCP tools: connect your MCP servers once, group them into profiles, and
+give every AI client exactly the tools it needs, with permissions, approvals and an audit trail.
 
-Community Edition (CE) is free for eligible production use in companies with at most 50 employees including affiliates, and for nonproduction evaluation at any company size. CE includes 25 active accounts, one organization, one REST/OpenAPI connection and one active gateway instance. MCP connections, profiles and tool calls have no commercial quota.
+This repository holds installation materials and public documentation for the Community Edition
+(CE) container image. Service source is private.
 
-Enterprise Edition (EE) adds enterprise identity, automation, log export, longer retention and multiple gateway replicas. Paid and individually issued trial licenses are verified offline. User limits follow the license, including unlimited users. Paid EE includes support and onboarding; SLA is agreed separately.
+## Quick start with Docker Compose
 
-Start with [installation](docs/help/deployment/installation.md), [edition details](docs/help/users/editions.md) and [image verification](docs/help/deployment/image-verification.md). Read [CE terms](LICENSE-CE.txt) before accepting them.
-
-Release images and signature/SBOM links are published only after release validation. Use an immutable image digest. Do not use a source-repository archive as an installation package.
-
-Support and EE/trial requests: hello@dxheroes.io. Report public issues without credentials or private tool results.
-
-## Install CE locally
-
-Every release publishes an immutable `release.json`. Copy `.env.example` to `.env`, put the
-published CE `image@sha256:…` value in `GATEWAY_IMAGE`, generate independent secrets, read the CE
-terms, and then start the reviewed plan:
+You need Docker with Compose v2 and a shell with `openssl` (macOS, Linux or WSL). Copy the whole
+block. The last line inside `.env` accepts the [CE terms](LICENSE-CE.txt), so read them first: CE
+is free for production use in companies with up to 50 employees, and for evaluation at any company.
 
 ```sh
-cp .env.example .env
-docker compose config
-docker compose pull
+mkdir mcp-gateway && cd mcp-gateway
+curl -fsSLO https://raw.githubusercontent.com/DXHeroes/mcp-gateway/main/compose.yaml
+cat > .env <<EOF
+POSTGRES_PASSWORD=$(openssl rand -hex 32)
+BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+GATEWAY_ENCRYPTION_KEY=$(openssl rand -base64 32)
+GATEWAY_CE_TERMS_ACCEPTED=2026-09-18.1
+EOF
+chmod 600 .env
 docker compose up -d --wait
 ```
 
-The browser UI and management API are then available at `http://localhost:3001`. The default
-configuration binds the Gateway only to loopback. Use a TLS reverse proxy and set `PUBLIC_URL`
-before exposing it on a network. See [installation](docs/help/deployment/installation.md) for the
-full procedure and backup requirements.
+Open http://localhost:3001 and create an account. The first account owns the gateway and gets a
+`default` profile. On the Dashboard, **Add server** connects your first MCP server; **MCP Servers →
+Catalog** lists the ready-made ones.
+
+Keep `.env`. It holds the key that encrypts the credentials stored in the database, and without it
+they cannot be read again.
+
+## Quick start with `docker run`
+
+The same setup without Compose: one network, a PostgreSQL container and the gateway.
+
+```sh
+mkdir mcp-gateway && cd mcp-gateway
+DB_PASSWORD=$(openssl rand -hex 32)
+cat > gateway.env <<EOF
+DATABASE_URL=postgresql://gateway:${DB_PASSWORD}@mcp-gateway-db:5432/gateway
+BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+GATEWAY_ENCRYPTION_KEY=$(openssl rand -base64 32)
+GATEWAY_CE_TERMS_ACCEPTED=2026-09-18.1
+EOF
+chmod 600 gateway.env
+
+docker network create mcp-gateway
+docker run -d --name mcp-gateway-db --network mcp-gateway --restart unless-stopped \
+  -e POSTGRES_USER=gateway -e POSTGRES_DB=gateway -e POSTGRES_PASSWORD="$DB_PASSWORD" \
+  -v mcp-gateway-db:/var/lib/postgresql/data \
+  postgres:17-alpine
+docker run -d --name mcp-gateway --network mcp-gateway --restart unless-stopped \
+  --env-file gateway.env -p 127.0.0.1:3001:3001 \
+  devdxheroes/mcp-gateway-ce:v0.5.0 # x-release-please-version
+```
+
+The gateway waits for the database and applies migrations itself, so a `connection refused` line
+in `docker logs -f mcp-gateway` while PostgreSQL starts is expected. Then open
+http://localhost:3001 as above.
+
+## Image
+
+The CE image is public on Docker Hub as `devdxheroes/mcp-gateway-ce` and on GitHub Container
+Registry as `ghcr.io/dxheroes/mcp-gateway-ce`, with the same tags and digests. Tags are release
+versions such as `v0.5.0`; there is no `latest`, so `docker pull` without a tag fails. <!-- x-release-please-version -->
+
+To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v0.5.0` to `.env` (Compose) or <!-- x-release-please-version -->
+use that name in the `docker run` command.
+
+## Connect an AI client
+
+The Dashboard shows the gateway endpoint, which serves your default profile. On a new installation
+it is `http://localhost:3001/api/mcp/organization/gateway`:
+
+```sh
+claude mcp add --transport http mcp-gateway http://localhost:3001/api/mcp/organization/gateway
+```
+
+Other clients that support remote MCP servers over HTTP use the same URL:
+
+```json
+{
+  "mcpServers": {
+    "mcp-gateway": { "type": "http", "url": "http://localhost:3001/api/mcp/organization/gateway" }
+  }
+}
+```
+
+The client signs you in through the browser (OAuth). See [Get started](docs/help/users/introduction/quick-start.md)
+for profiles, tool permissions and approvals.
+
+## Update, stop, remove
+
+- **Update (Compose):** download `compose.yaml` again and run `docker compose up -d --wait`. The
+  new image migrates the database on start. Back up the database before you update.
+- **Update (`docker run`):** `docker rm -f mcp-gateway`, then run the gateway command again with the
+  new tag.
+- **Stop:** `docker compose down`, or `docker stop mcp-gateway mcp-gateway-db`. Data stays in the
+  volume.
+- **Remove everything, including data:** `docker compose down -v`, or remove both containers, the
+  `mcp-gateway-db` volume and the `mcp-gateway` network.
+
+## Before you go to production
+
+- Put the gateway behind a TLS reverse proxy and set `PUBLIC_URL` to its address. The defaults
+  publish port 3001 on loopback only.
+- After the owner account exists, set `AUTH_SIGNUP_MODE=invite_only` and restart.
+- Pin the image by digest from `release.json` and verify its signature: see
+  [image verification](docs/help/deployment/image-verification.md).
+- Back up the database and `.env` together.
+
+The full procedure, Helm (Kubernetes/OpenShift) and upgrades are in
+[installation](docs/help/deployment/installation.md).
+
+## Editions
+
+CE includes 25 active accounts, one organization, one REST/OpenAPI connection and one active gateway
+instance. MCP connections, profiles and tool calls have no commercial quota. Enterprise Edition (EE)
+adds enterprise identity, automation, log export, longer retention and multiple gateway replicas,
+with offline-verified paid or trial licenses. See [editions](docs/help/users/editions.md).
+
+Support and EE/trial requests: hello@dxheroes.io. Report public issues without credentials or
+private tool results.
 
 ## Claude marketplace
 
@@ -44,5 +139,8 @@ runs read-only preflight checks, displays the exact plan, and waits for explicit
 approval before writing files, starting or replacing containers, registering an MCP endpoint, or
 restoring data.
 
+## License
+
 The public repository is Apache-2.0 for documentation, Compose, Helm, and plugin materials. The CE
-and EE container images use the separate terms shipped here. No service source is published.
+and EE container images use the separate terms shipped here ([CE](LICENSE-CE.txt),
+[EE](LICENSE-EE.txt)). No service source is published.

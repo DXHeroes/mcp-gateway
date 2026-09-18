@@ -29,8 +29,7 @@ helm install mcp-gateway charts/local-mcp-gateway \
   --set image.digest=sha256:... \
   --set secret.existingSecret=mcp-gateway-secrets \
   --set route.host=mcp-gateway.apps.bank.internal \
-  --set config.betterAuthUrl=https://mcp-gateway.apps.bank.internal \
-  --set config.frontendUrl=https://mcp-gateway.apps.bank.internal
+  --set config.publicUrl=https://mcp-gateway.apps.bank.internal
 ```
 
 ## Quick start (kind / local dev)

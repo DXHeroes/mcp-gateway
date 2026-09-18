@@ -19,10 +19,11 @@ and configuration exports. Do not pull or execute an unreviewed image or mutable
 Present one concrete plan containing the target directory, edition, version, image digest, public
 URL, port binding, database volume, generated file paths, secret-generation commands, terms version,
 start command, health checks, and rollback/removal commands. For CE, require the administrator to
-choose `production` or `evaluation` and explicitly accept the cited CE terms version. For EE,
-require the administrator to confirm the private image access and license-file path. Wait for
-explicit approval of that exact plan before creating the directory, `.env`, secrets, volumes, or
-containers.
+explicitly accept the cited CE terms version; accepting it confirms eligible use, and there is no
+separate production/evaluation choice. For EE, require the administrator to confirm the private
+image access and how `GATEWAY_LICENSE` receives the license (a mounted file path or the license
+content). Wait for explicit approval of that exact plan before creating the directory, `.env`,
+secrets, volumes, or containers.
 
 After approval, generate each secret independently with at least 32 random bytes and write it only
 to a mode-0600 `.env` or secret-manager target. Set `GATEWAY_IMAGE` to `image@sha256:…`, run

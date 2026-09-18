@@ -96,10 +96,12 @@
       "type": "object",
       "properties": {
         "ceTermsAccepted": { "type": "string" },
-        "ceUse": { "type": "string", "enum": ["", "production", "evaluation"] },
-        "licenseFile": { "type": "string" },
-        "betterAuthUrl": { "type": "string" },
-        "frontendUrl": { "type": "string" },
+        "ceUse": {
+          "type": "string",
+          "description": "Deprecated and ignored: accepting the CE terms (ceTermsAccepted) is enough."
+        },
+        "license": { "type": "string", "pattern": "^([^{\\s].*)?$" },
+        "publicUrl": { "type": "string" },
         "corsOrigins": { "type": "string" },
         "logLevel": { "type": "string", "enum": ["", "error", "warn", "info", "debug", "trace"] },
         "authEmailPassword": { "type": "string" },
