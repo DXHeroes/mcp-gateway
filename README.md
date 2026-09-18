@@ -70,6 +70,9 @@ versions such as `v0.5.0`; there is no `latest`, so `docker pull` without a tag 
 To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v0.5.0` to `.env` (Compose) or <!-- x-release-please-version -->
 use that name in the `docker run` command.
 
+Signatures belong to the repository they were published in, so verify the reference that
+`release.json` names, not a copy of it: see [image verification](docs/help/deployment/image-verification.md).
+
 ## Connect an AI client
 
 The Dashboard shows the gateway endpoint, which serves your default profile. On a new installation
