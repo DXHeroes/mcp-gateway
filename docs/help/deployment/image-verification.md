@@ -1,9 +1,23 @@
 # Verify edition images
 
 One reviewed private source revision produces paired CE and EE images with the same Gateway version.
-CE is public at `ghcr.io/dxheroes/mcp-gateway-ce`; EE stays private at
+CE is public at `ghcr.io/dxheroes/mcp-gateway-ce` and mirrored at
+`docker.io/dxheroes/mcp-gateway-ce`; EE stays private at
 `docker.io/dxheroes/mcp-gateway-ee`. Each release index contains native `linux/amd64` and
-`linux/arm64` subjects. The workflow does not publish `latest` or `stable`.
+`linux/arm64` subjects. The workflow does not publish `latest` or `stable`, so a pull without a
+tag fails: pin a version or, better, a digest.
+
+The Docker Hub mirror is a copy of the signed GHCR index, not a second build. Both registries serve
+the **same digest** with the same SBOM and provenance, and `release.json` lists the mirror under
+`mirrors`. A Cosign signature is stored next to the image it signs, so the mirror carries its own;
+verify the reference you actually pull.
+
+## Release channels
+
+`vX.Y.Z` is a release. `vX.Y.Z-beta.N` and the moving tag `beta` are built from every change to the
+development branch so that a fix can be tried before it is released. A beta passed the same audit,
+scan and signing as a release, but it is unsupported, may contain a breaking configuration change
+whose upgrade notes are not final, and `beta` moves without notice. Do not run production on it.
 
 Every native subject is content-audited, exercised as its actual architecture, scanned for fixed
 HIGH/CRITICAL vulnerabilities, and published with BuildKit SBOM and provenance attestations. Only
@@ -39,6 +53,15 @@ advisories under their own policy.
 For an offline deployment, verify online first, then mirror the digest and OCI referrers with tooling
 that preserves signatures and attestations. Verify the destination digest again. Copying a tag alone
 does not preserve the complete evidence.
+
+To verify the Docker Hub mirror, swap the repository and keep the digest:
+
+```bash
+MIRROR="$(jq -r '.mirrors[0] + "@" + .digest' release.json)"
+cosign verify "$MIRROR" \
+  --certificate-identity "$(jq -r .signingIdentity release.json)" \
+  --certificate-oidc-issuer https://token.actions.githubusercontent.com
+```
 
 EE verification uses the same process after authenticating to its private Docker Hub repository.
 Offline product-license signatures and image supply-chain signatures are separate mechanisms; an
