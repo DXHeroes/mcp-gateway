@@ -14,6 +14,29 @@ build and migration details behind it, and reports it on the authenticated
 `devdxheroes/mcp-gateway` and carried moving `latest` and `stable` tags, neither of which exists
 any more, so the first thing to fix is the image reference itself.
 
+## 1.0.0 — the compatibility promise starts here
+
+**No action required.** Nothing in a running deployment changes: no variable, no migration step,
+no image name. 1.0.0 is the same product as 0.7.x with a promise attached.
+
+From this release on, SemVer means what it says here: inside `v1` no configuration, API or
+behaviour change will break a working deployment. Anything that would, bumps the major and
+arrives with its own section in this file. Before 1.0.0 a breaking change could land in a minor,
+which is why 0.3.0, 0.4.0, 0.6.0 and 0.7.0 each have one above.
+
+That is what makes the moving tags safe to pin:
+
+| You want | Pin |
+|---|---|
+| A deployment that never changes until you change it | the digest from `release.json`, or `v1.2.3` |
+| Every release of the major, as it comes | `v1` |
+| Only patches of one minor | `v1.2` |
+
+`v1` and `v1.2` move to the newest release of their line and resolve to a digest you can verify
+exactly as before. There is still no `latest`, and no `v0`: before 1.0.0 a minor could break
+compatibility, so that line was never published. The Helm chart carries the same lines without
+the `v` (`--version 1`).
+
 ## 0.7.0 — `AUTH_SECRET` replaces `BETTER_AUTH_SECRET`; the Helm chart becomes `mcp-gateway`
 
 Two changes need action. `AUTH_SECRET` applies to every deployment; the chart rename applies to

@@ -7,7 +7,8 @@ Every stable release publishes this chart as a signed OCI artifact,
 `oci://registry-1.docker.io/dxheroes/mcp-gateway`, with the chart version equal to the Gateway
 version (`0.7.0` for `v0.7.0`; Helm tags carry no `v`). It is public: no login is needed for the
 chart, only for a private EE image. The same chart is also in the public `DXHeroes/mcp-gateway`
-repository. Pin `image.digest` in production.
+repository. Pin `image.digest` in production. `--version 1` (or `1.0`) installs the newest chart of that
+line; `--version 1.0.0` is the exact chart.
 
 Until 0.6.0 the chart was called `local-mcp-gateway`. An installation made with that name keeps
 its resource names and selectors only with `nameOverride: local-mcp-gateway`; see the 0.7.0
