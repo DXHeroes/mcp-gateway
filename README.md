@@ -1,6 +1,6 @@
 # DXH Gateway
 
-> **Beta branch.** These materials install `v0.7.1-beta.2`, a pre-release build of the
+> **Beta branch.** These materials install `v0.8.0-beta.3`, a pre-release build of the
 > next version from the development branch, for trying a change before it is released. It is
 > not a supported release. For production, use the
 > [`main` branch](https://github.com/DXHeroes/mcp-gateway) and its release tags.
@@ -59,7 +59,7 @@ docker run -d --name mcp-gateway-db --network mcp-gateway --restart unless-stopp
   postgres:17-alpine
 docker run -d --name mcp-gateway --network mcp-gateway --restart unless-stopped \
   --env-file gateway.env -p 127.0.0.1:3001:3001 \
-  dxheroes/mcp-gateway-ce:v0.7.1-beta.2
+  dxheroes/mcp-gateway-ce:v0.8.0-beta.3
 ```
 
 The gateway waits for the database and applies migrations itself, so a `connection refused` line
@@ -72,7 +72,7 @@ The CE image is public on Docker Hub as `dxheroes/mcp-gateway-ce` and on GitHub 
 Registry as `ghcr.io/dxheroes/mcp-gateway-ce`, with the same tags and digests. Tags are release
 versions (`vX.Y.Z`); there is no `latest`, so `docker pull` without a tag fails.
 
-To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v0.7.1-beta.2` to `.env` (Compose) or
+To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v0.8.0-beta.3` to `.env` (Compose) or
 use that name in the `docker run` command.
 
 The repositories also carry `vX.Y.Z-beta.N` builds and a moving `beta` tag from the development
