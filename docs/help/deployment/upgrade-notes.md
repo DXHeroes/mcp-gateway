@@ -9,6 +9,11 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
+**Coming from 0.2.x or earlier?** Apply the sections in order: 0.3.0, then 0.4.0, then 0.6.0, then
+0.7.0. 0.5.0 needs no action. Start with the 0.3.0 image rename below — before 0.3.0 the image was
+`devdxheroes/mcp-gateway` and carried moving `latest` and `stable` tags, neither of which exists
+any more, so the first thing to fix is the image reference itself.
+
 ## 0.7.0 — `AUTH_SECRET` replaces `BETTER_AUTH_SECRET`; the Helm chart becomes `mcp-gateway`
 
 Two changes need action. `AUTH_SECRET` applies to every deployment; the chart rename applies to
@@ -147,8 +152,12 @@ pulling the new name answers `pull access denied`, ask DX Heroes for access to t
 repository; do not work around it by staying on the old name, which will not receive security
 fixes.
 
-CE needs no change. Its canonical image stays `ghcr.io/dxheroes/mcp-gateway-ce`, and the same
-signed digest is now also public on Docker Hub as `docker.io/dxheroes/mcp-gateway-ce`.
+CE needs no change **if you pull from GHCR**. Its canonical image stays
+`ghcr.io/dxheroes/mcp-gateway-ce`, and the same signed digest is now also public on Docker Hub as
+`docker.io/dxheroes/mcp-gateway-ce`. If you pinned the Docker Hub name instead, the namespace moved
+for CE too: the published compose file defaulted to `docker.io/devdxheroes/mcp-gateway-ce` up to
+`v0.5.0` and to `docker.io/dxheroes/mcp-gateway-ce` from `v0.6.0`. Update your own compose file or
+`GATEWAY_IMAGE` accordingly.
 
 Both editions are now also published as `vX.Y.Z-beta.N` and a moving `beta` tag, built from
 every change to the development branch. Those are for trying a fix before its release, not for
@@ -245,7 +254,34 @@ Reverting to 0.3.x requires putting `GATEWAY_LICENSE_FILE` back, and that
 version only accepts a path: inline content has to be written to a mounted file
 again. No data or schema migration is involved.
 
-## 0.3.0 — one public URL replaces `BETTER_AUTH_URL` and `FRONTEND_URL`
+## 0.3.0 — one public URL replaces `BETTER_AUTH_URL` and `FRONTEND_URL`; the EE image is renamed
+
+Two changes need action. The image rename applies to EE only; `PUBLIC_URL` applies to every
+deployment.
+
+### The EE image is renamed, and `latest` / `stable` are gone
+
+**Action required for EE, before you pull 0.3.0.** The image was renamed from
+`devdxheroes/mcp-gateway` to `devdxheroes/mcp-gateway-ee` when the Community Edition was
+introduced and the two editions needed separate repositories. (It moved again in 0.6.0 — if you
+are upgrading past that release, go straight to `dxheroes/mcp-gateway-ee` and read the 0.6.0
+section.)
+
+| Where | Before | After |
+|---|---|---|
+| Docker / Compose | `image: devdxheroes/mcp-gateway:<tag>` | `image: dxheroes/mcp-gateway-ee:vX.Y.Z` |
+| Helm | `image.repository: devdxheroes/mcp-gateway` | `image.repository: dxheroes/mcp-gateway-ee` |
+
+At the same time the moving tags **`latest` and `stable` stopped being published**. Only
+`vX.Y.Z` releases exist (and, from 0.6.0, `vX.Y.Z-beta.N` plus a moving `beta`). A deployment
+that referenced `:latest` or `:stable` keeps running the image it already pulled and silently
+stops receiving updates; a fresh pull fails with `manifest unknown`. Pin an explicit `vX.Y.Z`,
+or better the digest from that release's `release.json`.
+
+There is no `latest` by design: a moving tag would hand you a breaking configuration change —
+of which this file lists several — with no warning.
+
+### One public URL replaces `BETTER_AUTH_URL` and `FRONTEND_URL`
 
 **Action required.** A gateway that still sets `BETTER_AUTH_URL` or
 `FRONTEND_URL` without `PUBLIC_URL` refuses to start with a message naming the
