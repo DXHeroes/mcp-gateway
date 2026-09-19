@@ -1,6 +1,6 @@
 ---
 name: install
-description: Prepare and install DXH MCP Gateway CE or EE locally with immutable images, read-only preflight, and explicit approval before writing or starting services.
+description: Prepare and install DXH Gateway CE or EE locally with immutable images, read-only preflight, and explicit approval before writing or starting services.
 ---
 
 # Install MCP Gateway

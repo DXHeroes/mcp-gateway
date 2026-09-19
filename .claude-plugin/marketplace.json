@@ -4,12 +4,12 @@
     "name": "DX Heroes",
     "email": "prokop.simek@dxheroes.io"
   },
-  "description": "Install, connect, upgrade, back up, restore, and diagnose DXH MCP Gateway.",
+  "description": "Install, connect, upgrade, back up, restore, and diagnose DXH Gateway.",
   "plugins": [
     {
       "name": "mcp-gateway",
       "source": "./plugin",
-      "description": "Assisted administration for DXH MCP Gateway CE and EE with approval before changes.",
+      "description": "Assisted administration for DXH Gateway CE and EE with approval before changes.",
       "category": "development"
     }
   ]

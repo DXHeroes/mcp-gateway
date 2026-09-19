@@ -1,6 +1,6 @@
 # local-mcp-gateway Helm chart
 
-OpenShift-native Helm chart for the Local MCP Gateway, hardened for the
+OpenShift-native Helm chart for DXH Gateway, hardened for the
 `restricted-v2` SCC (arbitrary UID, read-only root filesystem, dropped
 capabilities). Works on plain Kubernetes too.
 
