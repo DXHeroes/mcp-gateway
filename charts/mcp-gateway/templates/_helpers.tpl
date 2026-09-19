@@ -1,14 +1,14 @@
 {{/*
 Expand the name of the chart.
 */}}
-{{- define "local-mcp-gateway.name" -}}
+{{- define "mcp-gateway.name" -}}
 {{- default .Chart.Name .Values.nameOverride | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Create a default fully qualified app name (max 63 chars, DNS-safe).
 */}}
-{{- define "local-mcp-gateway.fullname" -}}
+{{- define "mcp-gateway.fullname" -}}
 {{- if .Values.fullnameOverride }}
 {{- .Values.fullnameOverride | trunc 63 | trimSuffix "-" }}
 {{- else }}
@@ -24,16 +24,16 @@ Create a default fully qualified app name (max 63 chars, DNS-safe).
 {{/*
 Chart name and version, for the helm.sh/chart label.
 */}}
-{{- define "local-mcp-gateway.chart" -}}
+{{- define "mcp-gateway.chart" -}}
 {{- printf "%s-%s" .Chart.Name .Chart.Version | replace "+" "_" | trunc 63 | trimSuffix "-" }}
 {{- end }}
 
 {{/*
 Common labels.
 */}}
-{{- define "local-mcp-gateway.labels" -}}
-helm.sh/chart: {{ include "local-mcp-gateway.chart" . }}
-{{ include "local-mcp-gateway.selectorLabels" . }}
+{{- define "mcp-gateway.labels" -}}
+helm.sh/chart: {{ include "mcp-gateway.chart" . }}
+{{ include "mcp-gateway.selectorLabels" . }}
 {{- if .Chart.AppVersion }}
 app.kubernetes.io/version: {{ .Chart.AppVersion | quote }}
 {{- end }}
@@ -46,17 +46,17 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{/*
 Selector labels (immutable across upgrades).
 */}}
-{{- define "local-mcp-gateway.selectorLabels" -}}
-app.kubernetes.io/name: {{ include "local-mcp-gateway.name" . }}
+{{- define "mcp-gateway.selectorLabels" -}}
+app.kubernetes.io/name: {{ include "mcp-gateway.name" . }}
 app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
 ServiceAccount name to use.
 */}}
-{{- define "local-mcp-gateway.serviceAccountName" -}}
+{{- define "mcp-gateway.serviceAccountName" -}}
 {{- if .Values.serviceAccount.create }}
-{{- default (include "local-mcp-gateway.fullname" .) .Values.serviceAccount.name }}
+{{- default (include "mcp-gateway.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
 {{- default "default" .Values.serviceAccount.name }}
 {{- end }}
@@ -65,7 +65,7 @@ ServiceAccount name to use.
 {{/*
 Fully resolved image reference. Digest takes precedence over tag.
 */}}
-{{- define "local-mcp-gateway.image" -}}
+{{- define "mcp-gateway.image" -}}
 {{- $registry := .Values.image.registry -}}
 {{- $repo := .Values.image.repository -}}
 {{- /* Gateway release tags and the chart appVersion are unified. */ -}}
@@ -84,18 +84,18 @@ Fully resolved image reference. Digest takes precedence over tag.
 {{/*
 Name of the Secret holding sensitive env vars (existing takes precedence).
 */}}
-{{- define "local-mcp-gateway.secretName" -}}
+{{- define "mcp-gateway.secretName" -}}
 {{- if .Values.secret.existingSecret }}
 {{- .Values.secret.existingSecret }}
 {{- else }}
-{{- include "local-mcp-gateway.fullname" . }}
+{{- include "mcp-gateway.fullname" . }}
 {{- end }}
 {{- end }}
 
 {{/*
 Whether a Secret reference should be wired into the pod (existing or chart-managed).
 */}}
-{{- define "local-mcp-gateway.usesSecret" -}}
+{{- define "mcp-gateway.usesSecret" -}}
 {{- if or .Values.secret.existingSecret .Values.secret.create -}}
 true
 {{- end -}}
@@ -104,7 +104,7 @@ true
 {{/*
 Validate that route and ingress are not both enabled.
 */}}
-{{- define "local-mcp-gateway.validateRouting" -}}
+{{- define "mcp-gateway.validateRouting" -}}
 {{- if and .Values.route.enabled .Values.ingress.enabled -}}
 {{- fail "route.enabled and ingress.enabled cannot both be true. Use Route (OpenShift) or Ingress (vanilla Kubernetes), not both." -}}
 {{- end -}}

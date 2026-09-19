@@ -1,5 +1,5 @@
 apiVersion: v2
-name: local-mcp-gateway
+name: mcp-gateway
 description: |
   DXH Gateway — aggregates multiple MCP servers behind a single
   authenticated endpoint. OpenShift-native chart hardened for the
@@ -8,8 +8,8 @@ description: |
 type: application
 # Chart and application use the same Gateway product version. Production
 # deployments should still pin image.digest rather than relying on the tag.
-version: 0.6.0
-appVersion: "0.6.0"
+version: 0.7.0-beta.10
+appVersion: "0.7.0-beta.10"
 kubeVersion: ">=1.25.0-0"
 keywords:
   - mcp

@@ -10,7 +10,7 @@ company with at most 50 employees including affiliates, or nonproduction evaluat
 size. There is no separate purpose setting and no online activation.
 
 Check out a signed public release and verify its `release.json`. Copy `.env.example` to `.env`,
-generate `POSTGRES_PASSWORD` as hex (it becomes part of the database URL) and `BETTER_AUTH_SECRET`
+generate `POSTGRES_PASSWORD` as hex (it becomes part of the database URL) and `AUTH_SECRET`
 and `GATEWAY_ENCRYPTION_KEY` as independent secrets with at least 32 random bytes each, set
 `PUBLIC_URL`, and pin `GATEWAY_IMAGE` to the verified digest, for example
 `docker.io/dxheroes/mcp-gateway-ce@sha256:…` or `ghcr.io/dxheroes/mcp-gateway-ce@sha256:…`.

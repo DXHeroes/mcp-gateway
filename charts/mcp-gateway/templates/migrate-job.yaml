@@ -10,9 +10,9 @@
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: {{ include "local-mcp-gateway.fullname" . }}-migrate
+  name: {{ include "mcp-gateway.fullname" . }}-migrate
   labels:
-    {{- include "local-mcp-gateway.labels" . | nindent 4 }}
+    {{- include "mcp-gateway.labels" . | nindent 4 }}
   annotations:
     "helm.sh/hook": pre-install,pre-upgrade
     "helm.sh/hook-weight": "-5"
@@ -28,7 +28,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "local-mcp-gateway.selectorLabels" . | nindent 8 }}
+        {{- include "mcp-gateway.selectorLabels" . | nindent 8 }}
         app.kubernetes.io/component: migrate
     spec:
       restartPolicy: Never
@@ -45,7 +45,7 @@ spec:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
         - name: migrate
-          image: {{ include "local-mcp-gateway.image" . }}
+          image: {{ include "mcp-gateway.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -54,11 +54,11 @@ spec:
           # Migrations need only DB creds + GATEWAY_ENCRYPTION_KEY (from the
           # Secret), so the ConfigMap is intentionally NOT referenced — one less
           # resource that would have to exist during the pre-install hook phase.
-          {{- if or (include "local-mcp-gateway.usesSecret" .) .Values.extraEnvFrom }}
+          {{- if or (include "mcp-gateway.usesSecret" .) .Values.extraEnvFrom }}
           envFrom:
-            {{- if include "local-mcp-gateway.usesSecret" . }}
+            {{- if include "mcp-gateway.usesSecret" . }}
             - secretRef:
-                name: {{ include "local-mcp-gateway.secretName" . }}
+                name: {{ include "mcp-gateway.secretName" . }}
             {{- end }}
             {{- with .Values.extraEnvFrom }}
             {{- toYaml . | nindent 12 }}

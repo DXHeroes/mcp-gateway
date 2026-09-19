@@ -4,13 +4,13 @@
 {{- if and (eq .Values.edition "ce") (or (ne (int .Values.replicaCount) 1) .Values.autoscaling.enabled) -}}
 {{- fail "CE requires replicaCount=1 and autoscaling.enabled=false" -}}
 {{- end -}}
-{{- include "local-mcp-gateway.validateRouting" . -}}
+{{- include "mcp-gateway.validateRouting" . -}}
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "local-mcp-gateway.fullname" . }}
+  name: {{ include "mcp-gateway.fullname" . }}
   labels:
-    {{- include "local-mcp-gateway.labels" . | nindent 4 }}
+    {{- include "mcp-gateway.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -25,7 +25,7 @@ spec:
   {{- end }}
   selector:
     matchLabels:
-      {{- include "local-mcp-gateway.selectorLabels" . | nindent 6 }}
+      {{- include "mcp-gateway.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       annotations:
@@ -35,7 +35,7 @@ spec:
         {{- toYaml . | nindent 8 }}
         {{- end }}
       labels:
-        {{- include "local-mcp-gateway.selectorLabels" . | nindent 8 }}
+        {{- include "mcp-gateway.selectorLabels" . | nindent 8 }}
         {{- with .Values.podLabels }}
         {{- toYaml . | nindent 8 }}
         {{- end }}
@@ -44,13 +44,13 @@ spec:
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
-      serviceAccountName: {{ include "local-mcp-gateway.serviceAccountName" . }}
+      serviceAccountName: {{ include "mcp-gateway.serviceAccountName" . }}
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       containers:
-        - name: {{ .Chart.Name }}
-          image: {{ include "local-mcp-gateway.image" . }}
+        - name: {{ include "mcp-gateway.name" . }}
+          image: {{ include "mcp-gateway.image" . }}
           imagePullPolicy: {{ .Values.image.pullPolicy }}
           securityContext:
             {{- toYaml .Values.securityContext | nindent 12 }}
@@ -66,10 +66,10 @@ spec:
               protocol: TCP
           envFrom:
             - configMapRef:
-                name: {{ include "local-mcp-gateway.fullname" . }}-config
-            {{- if include "local-mcp-gateway.usesSecret" . }}
+                name: {{ include "mcp-gateway.fullname" . }}-config
+            {{- if include "mcp-gateway.usesSecret" . }}
             - secretRef:
-                name: {{ include "local-mcp-gateway.secretName" . }}
+                name: {{ include "mcp-gateway.secretName" . }}
             {{- end }}
             {{- with .Values.extraEnvFrom }}
             {{- toYaml . | nindent 12 }}
