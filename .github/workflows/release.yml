@@ -25,9 +25,22 @@ jobs:
           GH_TOKEN: ${{ github.token }}
           TAG: ${{ github.ref_name }}
         run: |
+          set -euo pipefail
           if gh release view "$TAG" >/dev/null 2>&1; then
             echo "Release $TAG already exists."
             exit 0
           fi
-          gh release create "$TAG" --verify-tag --notes-from-tag --latest \
+          # The release notes are the annotated tag's message. `gh release create
+          # --notes-from-tag` reads the tag from the LOCAL repository, and a checkout of a tag ref
+          # carries no annotation, so v0.7.0 and v1.0.0 were published with the export commit's
+          # message instead. Read the tag object through the API, and refuse a tag without notes
+          # rather than publish a release that explains nothing.
+          object=$(gh api "repos/$GITHUB_REPOSITORY/git/ref/tags/$TAG" \
+            --jq 'select(.object.type == "tag") | .object.sha')
+          if [ -z "$object" ]; then
+            echo "::error::$TAG is not an annotated tag, so it carries no release notes."
+            exit 1
+          fi
+          gh api "repos/$GITHUB_REPOSITORY/git/tags/$object" --jq .message >"$RUNNER_TEMP/notes.md"
+          gh release create "$TAG" --verify-tag --notes-file "$RUNNER_TEMP/notes.md" --latest \
             --title "DXH Gateway $TAG" release.json
