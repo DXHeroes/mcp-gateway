@@ -54,7 +54,7 @@ docker run -d --name mcp-gateway-db --network mcp-gateway --restart unless-stopp
   postgres:17-alpine
 docker run -d --name mcp-gateway --network mcp-gateway --restart unless-stopped \
   --env-file gateway.env -p 127.0.0.1:3001:3001 \
-  dxheroes/mcp-gateway-ce:v0.7.0
+  dxheroes/mcp-gateway-ce:v1.0.0
 ```
 
 The gateway waits for the database and applies migrations itself, so a `connection refused` line
@@ -67,7 +67,13 @@ The CE image is public on Docker Hub as `dxheroes/mcp-gateway-ce` and on GitHub 
 Registry as `ghcr.io/dxheroes/mcp-gateway-ce`, with the same tags and digests. Tags are release
 versions (`vX.Y.Z`); there is no `latest`, so `docker pull` without a tag fails.
 
-To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v0.7.0` to `.env` (Compose) or
+Next to each release there are two moving tags: `vX.Y` is the newest patch of that minor and `vX`
+the newest release of that major, so `v1` takes every 1.x release as it comes and never crosses a
+breaking change — those bump the major. Before 1.0.0 a minor may break compatibility, so no `v0`
+exists. Pin a release or a digest for a deployment that never changes under you; pin a line when
+you want the updates automatically.
+
+To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v1.0.0` to `.env` (Compose) or
 use that name in the `docker run` command.
 
 The repositories also carry `vX.Y.Z-beta.N` builds and a moving `beta` tag from the development

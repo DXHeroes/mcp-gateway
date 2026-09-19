@@ -6,7 +6,7 @@ services:
     # Override with GATEWAY_IMAGE, e.g. ghcr.io/dxheroes/mcp-gateway-ce:<tag> or an image@sha256:… digest.
     # Coolify stores the default below as the variable's value once; update the image there by
     # changing GATEWAY_IMAGE.
-    image: ${GATEWAY_IMAGE:-docker.io/dxheroes/mcp-gateway-ce:v0.7.0}
+    image: ${GATEWAY_IMAGE:-docker.io/dxheroes/mcp-gateway-ce:v1.0.0}
     restart: unless-stopped
     ports:
       - "127.0.0.1:3001:3001"

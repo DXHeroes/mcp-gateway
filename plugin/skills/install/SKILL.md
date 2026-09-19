@@ -14,7 +14,9 @@ First inspect, without changing the host: operating system and architecture, Doc
 Compose versions, free disk and memory, port 3001, existing containers/volumes, selected release,
 `release.json`, Cosign signature and attestations, and whether the exact digest contains the native
 platform. Redact registry usernames, tokens, license contents, environment secrets, database URLs,
-and configuration exports. Do not pull or execute an unreviewed image or mutable tag.
+and configuration exports. Do not pull or execute an unreviewed image. Install by digest by default; a compatibility line
+(`vX`, `vX.Y`) is accepted only when the administrator asks for automatic updates inside that
+line, and then only after saying that the tag moves and what it resolves to today.
 
 Present one concrete plan containing the target directory, edition, version, image digest, public
 URL, port binding, database volume, generated file paths, secret-generation commands, terms version,

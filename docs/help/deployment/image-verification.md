@@ -14,7 +14,9 @@ verify the reference you actually pull.
 
 ## Release channels
 
-`vX.Y.Z` is a release. `vX.Y.Z-beta.N` and the moving tag `beta` are built from every change to the
+`vX.Y.Z` is a release. `vX.Y` and `vX` (from 1.0.0 on) are compatibility lines: they move to the
+newest release of that line and resolve to that release's digest, so verify the reference
+`release.json` names, not the line. `vX.Y.Z-beta.N` and the moving tag `beta` are built from every change to the
 development branch so that a fix can be tried before it is released. A beta passed the same audit,
 scan and signing as a release, but it is unsupported, may contain a breaking configuration change
 whose upgrade notes are not final, and `beta` moves without notice. Do not run production on it.

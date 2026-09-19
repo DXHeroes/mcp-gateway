@@ -8,8 +8,9 @@ description: Prepare a digest-pinned MCP Gateway upgrade with verification, back
 Read the installed `/api/edition` snapshot, Compose configuration, exact running image digest,
 database version, available disk, current health, and latest approved `release.json`. Verify the new
 digest has the host platform, matches the requested version, and has the expected Cosign identity,
-SBOM, provenance, source revision, edition, and terms version. Reject mutable tags and cross-edition
-replacement. Never infer that a pulled image has been deployed.
+SBOM, provenance, source revision, edition, and terms version. Reject cross-edition replacement, and resolve any moving tag
+(`beta`, or a compatibility line such as `v1`) to the digest behind it before deploying; upgrade
+by digest, and say which release that digest is. Never infer that a pulled image has been deployed.
 
 Create a consistent database backup and configuration backup before replacement. The preflight may
 inspect commands and destinations, but writing the backup requires approval. Present the current and
