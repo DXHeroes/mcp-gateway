@@ -17,7 +17,7 @@ mkdir mcp-gateway && cd mcp-gateway
 curl -fsSLO https://raw.githubusercontent.com/DXHeroes/mcp-gateway/main/compose.yaml
 cat > .env <<EOF
 POSTGRES_PASSWORD=$(openssl rand -hex 32)
-BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+AUTH_SECRET=$(openssl rand -base64 32)
 GATEWAY_ENCRYPTION_KEY=$(openssl rand -base64 32)
 GATEWAY_CE_TERMS_ACCEPTED=2026-09-18.1
 EOF
@@ -41,7 +41,7 @@ mkdir mcp-gateway && cd mcp-gateway
 DB_PASSWORD=$(openssl rand -hex 32)
 cat > gateway.env <<EOF
 DATABASE_URL=postgresql://gateway:${DB_PASSWORD}@mcp-gateway-db:5432/gateway
-BETTER_AUTH_SECRET=$(openssl rand -base64 32)
+AUTH_SECRET=$(openssl rand -base64 32)
 GATEWAY_ENCRYPTION_KEY=$(openssl rand -base64 32)
 GATEWAY_CE_TERMS_ACCEPTED=2026-09-18.1
 EOF
@@ -54,7 +54,7 @@ docker run -d --name mcp-gateway-db --network mcp-gateway --restart unless-stopp
   postgres:17-alpine
 docker run -d --name mcp-gateway --network mcp-gateway --restart unless-stopped \
   --env-file gateway.env -p 127.0.0.1:3001:3001 \
-  dxheroes/mcp-gateway-ce:v0.6.0
+  dxheroes/mcp-gateway-ce:v0.7.0
 ```
 
 The gateway waits for the database and applies migrations itself, so a `connection refused` line
@@ -65,13 +65,15 @@ http://localhost:3001 as above.
 
 The CE image is public on Docker Hub as `dxheroes/mcp-gateway-ce` and on GitHub Container
 Registry as `ghcr.io/dxheroes/mcp-gateway-ce`, with the same tags and digests. Tags are release
-versions such as `v0.6.0`; there is no `latest`, so `docker pull` without a tag fails.
+versions (`vX.Y.Z`); there is no `latest`, so `docker pull` without a tag fails.
 
-To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v0.6.0` to `.env` (Compose) or
+To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v0.7.0` to `.env` (Compose) or
 use that name in the `docker run` command.
 
 The repositories also carry `vX.Y.Z-beta.N` builds and a moving `beta` tag from the development
 branch, for trying a fix before it is released. They are not supported releases: pin a release tag.
+The [`beta` branch](https://github.com/DXHeroes/mcp-gateway/tree/beta) of this repository holds
+these instructions for the newest beta.
 
 Signatures belong to the repository they were published in, so verify the reference that
 `release.json` names, not a copy of it: see [image verification](docs/help/deployment/image-verification.md).

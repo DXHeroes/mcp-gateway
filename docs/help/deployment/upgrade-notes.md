@@ -9,6 +9,122 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
+## 0.7.0 — `AUTH_SECRET` replaces `BETTER_AUTH_SECRET`; the Helm chart becomes `mcp-gateway`
+
+Two changes need action. `AUTH_SECRET` applies to every deployment; the chart rename applies to
+Helm installations only, and both are made in the same upgrade.
+
+### `AUTH_SECRET` replaces `BETTER_AUTH_SECRET`
+
+**Action required for every deployment.** Rename `BETTER_AUTH_SECRET` to
+`AUTH_SECRET` and **keep its value**. A gateway that still sets only
+`BETTER_AUTH_SECRET` refuses to start with a message naming the variable to
+rename, and so does one that sets both to different values.
+
+It does not fall back silently, because the fallback would do damage. Without
+the key the gateway generates a random one at every start. That signs every user
+out, and since the same key encrypts every enrolled TOTP secret and backup code,
+nobody with two-factor authentication could sign in again. With
+`AUTH_REQUIRE_MFA` set, that is every password user.
+
+| Before | After |
+|---|---|
+| `BETTER_AUTH_SECRET=<value>` | `AUTH_SECRET=<the same value>` |
+| Secret key `BETTER_AUTH_SECRET` (Helm `secret.existingSecret`) | Secret key `AUTH_SECRET` |
+| Helm `secret.values.BETTER_AUTH_SECRET` (dev only) | Helm `secret.values.AUTH_SECRET` |
+
+The old name said which library reads the key, not what it is for. The new one
+sits next to the other sign-in settings (`AUTH_EMAIL_PASSWORD`,
+`AUTH_REQUIRE_MFA`, `AUTH_SIGNUP_MODE`). Startup messages name the variables but
+never print their values.
+
+While both names are set **to the same value**, the gateway starts and logs a
+warning that the old one is no longer read. Older versions ignore
+`AUTH_SECRET`, so you can add it before you upgrade and remove the old name
+afterwards.
+
+### Docker / Docker Compose
+
+In `.env`, or wherever the container gets its environment:
+
+```diff
+-BETTER_AUTH_SECRET=<value>
++AUTH_SECRET=<value>
+```
+
+If you deploy the published `compose.yaml`, take the 0.7.0 version of it
+together with the image. The older file passes only `BETTER_AUTH_SECRET` into
+the container, so a 0.7.0 image started from it refuses to start. The new file
+requires `AUTH_SECRET` in `.env`, and `docker compose up` stops before starting
+anything if it is missing.
+
+### Coolify and other dashboards
+
+Add `AUTH_SECRET` with the value currently in `BETTER_AUTH_SECRET`, redeploy,
+then delete `BETTER_AUTH_SECRET`. If Coolify deploys the published compose file,
+the new file makes Coolify list an empty `AUTH_SECRET`. Fill it in before the
+first deployment of 0.7.0.
+
+### Helm: rename the Secret key
+
+The chart turns every key of the Secret into an environment variable of the
+same name (`envFrom`), so rename the key in the Secret you reference in
+`secret.existingSecret`. With plain Kubernetes Secrets, copy the key first,
+upgrade, then remove the old one:
+
+```bash
+# OpenShift: oc ... | Kubernetes: kubectl ...
+oc -n mcp-gateway patch secret mcp-gateway-secrets --type merge -p \
+  "{\"data\":{\"AUTH_SECRET\":\"$(oc -n mcp-gateway get secret mcp-gateway-secrets \
+  -o jsonpath='{.data.BETTER_AUTH_SECRET}')\"}}"
+
+helm upgrade ...
+
+oc -n mcp-gateway patch secret mcp-gateway-secrets --type json \
+  -p '[{"op":"remove","path":"/data/BETTER_AUTH_SECRET"}]'
+```
+
+With Vault or External Secrets Operator, rename the target key in the
+`ExternalSecret` (or its template) and leave the stored value alone. A Secret
+change does not restart the pods, so run the `rollout restart` from the chart's
+install notes if you change the key without upgrading.
+
+### Rolling back
+
+Reverting to 0.6.x requires `BETTER_AUTH_SECRET` again. If you keep both names
+with the same value until you are sure about the upgrade, a rollback is a plain
+image change. No data or schema migration is involved.
+
+### The Helm chart is renamed to `mcp-gateway` and published
+
+**Action required for Helm installations only.** The chart that was `local-mcp-gateway` is now
+`mcp-gateway`, and every stable release publishes it, signed, as the public OCI artifact
+`oci://registry-1.docker.io/dxheroes/mcp-gateway` (chart version `0.7.0` for `v0.7.0`; Helm
+versions carry no `v`). The chart name feeds the `app.kubernetes.io/name` label and the resource
+names. Kubernetes does not let a Deployment change its selector, so upgrading an existing
+release to the renamed chart without the setting below fails.
+
+Add this to every upgrade of a release installed before 0.7.0, once and for good (put it in your
+values file):
+
+```yaml
+nameOverride: local-mcp-gateway
+```
+
+With it, the renamed chart renders the same resource names and selectors as before; only the
+`helm.sh/chart` label and the config checksum differ, which rolls the pods once as any upgrade
+does.
+
+```bash
+helm upgrade mcp-gateway oci://registry-1.docker.io/dxheroes/mcp-gateway --version 0.7.0 \
+  -n mcp-gateway --reuse-values --set nameOverride=local-mcp-gateway
+```
+
+A new installation needs nothing. Docker Compose, Coolify and other non-Helm deployments are not
+affected. `charts/catalog-stack` keeps its values key `local-mcp-gateway:` and its names: it
+depends on the renamed chart under that alias. Its `Chart.lock` is no longer committed; run
+`helm dependency build charts/catalog-stack` as before.
+
 ## 0.6.0 — EE images move to `dxheroes/mcp-gateway-ee`
 
 **Action required for EE only, before you pull 0.6.0.** From 0.6.0 on, the EE image is

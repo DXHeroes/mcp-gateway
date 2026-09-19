@@ -3,7 +3,7 @@
 1. Endpoint
 {{- if .Values.route.enabled }}
    OpenShift Route:
-     oc -n {{ .Release.Namespace }} get route {{ include "local-mcp-gateway.fullname" . }} -o jsonpath='{.spec.host}{"\n"}'
+     oc -n {{ .Release.Namespace }} get route {{ include "mcp-gateway.fullname" . }} -o jsonpath='{.spec.host}{"\n"}'
    {{- if .Values.route.host }}
    Configured host: http{{ if .Values.route.tls.enabled }}s{{ end }}://{{ .Values.route.host }}
    {{- end }}
@@ -14,13 +14,13 @@
    {{- end }}
 {{- else }}
    No Route/Ingress enabled. Reach the Service via port-forward:
-     kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "local-mcp-gateway.fullname" . }} 3001:{{ .Values.service.port }}
+     kubectl -n {{ .Release.Namespace }} port-forward svc/{{ include "mcp-gateway.fullname" . }} 3001:{{ .Values.service.port }}
 {{- end }}
 
 2. Verify health
    kubectl (or oc) -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }}
    Liveness:  GET /api/health        (DB-independent, always 200 when up)
-   Readiness: GET /api/health/ready   (503 while the database is unreachable)
+   Readiness: GET /api/health/ready   (503 while the database is unreachable or the served UI build is missing/broken)
 
 3. Secrets
 {{- if .Values.secret.existingSecret }}
@@ -37,9 +37,9 @@
    IMPORTANT: GATEWAY_ENCRYPTION_KEY is immutable. Rotating it invalidates every
    stored OAuth token and API key. Keep it stable across upgrades.
 
-   NOTE: rotating any other Secret key (e.g. BETTER_AUTH_SECRET) requires a manual
+   NOTE: rotating any other Secret key (e.g. AUTH_SECRET) requires a manual
    pod rollout — Secret changes do not trigger automatic rolling restarts:
-     kubectl (or oc) -n {{ .Release.Namespace }} rollout restart deployment/{{ include "local-mcp-gateway.fullname" . }}
+     kubectl (or oc) -n {{ .Release.Namespace }} rollout restart deployment/{{ include "mcp-gateway.fullname" . }}
 
 {{- if and (gt (int .Values.replicaCount) 1) (not .Values.migrations.runAsHook) }}
 

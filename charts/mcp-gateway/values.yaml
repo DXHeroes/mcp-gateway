@@ -1,7 +1,7 @@
 # -- Artifact edition. Must match the immutable image (never a runtime unlock).
 edition: ce
 
-# Default values for local-mcp-gateway.
+# Default values for mcp-gateway.
 # Every value here is overridable without forking templates.
 # Two target profiles are expected: a bank on OpenShift (restricted-v2, internal
 # registry, existingSecret/Vault) and a regular company on vanilla Kubernetes.
@@ -128,7 +128,7 @@ config:
   publicUrl: ""
   corsOrigins: ""
   logLevel: ""
-  # Auth method toggles (Better Auth). Switchable per customer.
+  # Sign-in method toggles. Switchable per customer.
   authEmailPassword: "" # "false" to disable email/password login
   # Gates new-account creation for BOTH email/password and SSO (Google/Microsoft/ADFS).
   authSignupMode: "" # open | invite_only | closed
@@ -195,7 +195,8 @@ config:
 # -- Secrets. Production: reference an existing Secret (Vault / External Secrets
 # Operator). The Secret's keys must be named after the env vars the app reads:
 #   GATEWAY_ENCRYPTION_KEY (required, immutable — rotating it invalidates stored
-#   tokens/API keys), DATABASE_URL, BETTER_AUTH_SECRET, and optionally
+#   tokens/API keys), DATABASE_URL, AUTH_SECRET (keep stable — it also encrypts
+#   enrolled two-factor; named BETTER_AUTH_SECRET before 0.7.0), and optionally
 #   GOOGLE_CLIENT_SECRET, MICROSOFT_CLIENT_SECRET, ADFS_CLIENT_SECRET, RESEND_API_KEY,
 #   MCP_EXTERNAL_JWT_ROLE_RFC7662_CLIENT_ID / MCP_EXTERNAL_JWT_ROLE_RFC7662_CLIENT_SECRET.
 secret:
@@ -207,7 +208,7 @@ secret:
   values: {}
     # GATEWAY_ENCRYPTION_KEY: ""
     # DATABASE_URL: ""
-    # BETTER_AUTH_SECRET: ""
+    # AUTH_SECRET: ""
 
 # -- Arbitrary extra env vars / sources, escape hatch for per-customer needs.
 extraEnv: []
@@ -237,7 +238,8 @@ resources:
     memory: 1Gi
 
 # -- Probes. Liveness is DB-independent; readiness fails (503) when the DB is
-# down; startup probe gives a generous window for cold start + DB migrations.
+# down or the UI build is missing/broken; startup probe gives a generous
+# window for cold start + DB migrations.
 livenessProbe:
   httpGet:
     path: /api/health

@@ -1,0 +1,33 @@
+# Turns a release tag into the repository's GitHub release. The tags come from the DXH Gateway
+# release pipeline together with the materials they describe; the annotated tag message holds the
+# release notes and release.json at the tag is the evidence of the published image.
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v[0-9]+.[0-9]+.[0-9]+'
+
+permissions: {}
+
+jobs:
+  release:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+        with:
+          persist-credentials: false
+      - name: Publish the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "Release $TAG already exists."
+            exit 0
+          fi
+          gh release create "$TAG" --verify-tag --notes-from-tag --latest \
+            --title "DXH Gateway $TAG" release.json

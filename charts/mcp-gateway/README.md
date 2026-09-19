@@ -1,11 +1,17 @@
-# local-mcp-gateway Helm chart
+# mcp-gateway Helm chart
 
-OpenShift-native Helm chart for DXH Gateway, hardened for the
-`restricted-v2` SCC (arbitrary UID, read-only root filesystem, dropped
-capabilities). Works on plain Kubernetes too.
+OpenShift-native Helm chart for DXH Gateway, hardened for the `restricted-v2` SCC (arbitrary UID,
+read-only root filesystem, dropped capabilities). Works on plain Kubernetes too.
 
-Use the chart from the public `DXHeroes/mcp-gateway` repository. Verify the release metadata and
-pin `image.digest`; the chart version and application version are one Gateway product version.
+Every stable release publishes this chart as a signed OCI artifact,
+`oci://registry-1.docker.io/dxheroes/mcp-gateway`, with the chart version equal to the Gateway
+version (`0.7.0` for `v0.7.0`; Helm tags carry no `v`). It is public: no login is needed for the
+chart, only for a private EE image. The same chart is also in the public `DXHeroes/mcp-gateway`
+repository. Pin `image.digest` in production.
+
+Until 0.6.0 the chart was called `local-mcp-gateway`. An installation made with that name keeps
+its resource names and selectors only with `nameOverride: local-mcp-gateway`; see the 0.7.0
+upgrade notes.
 
 ## Prerequisites
 
@@ -22,9 +28,9 @@ Secrets Operator) whose keys are named after the env vars the app reads:
 oc create secret generic mcp-gateway-secrets \
   --from-literal=GATEWAY_ENCRYPTION_KEY='<32+ random chars, immutable>' \
   --from-literal=DATABASE_URL='postgresql://user:pass@db.internal:5432/mcp' \
-  --from-literal=BETTER_AUTH_SECRET='<random>'
+  --from-literal=AUTH_SECRET='<random>'
 
-helm install mcp-gateway charts/local-mcp-gateway \
+helm install mcp-gateway oci://registry-1.docker.io/dxheroes/mcp-gateway --version <X.Y.Z> \
   --set image.registry=registry.bank.internal \
   --set image.digest=sha256:... \
   --set secret.existingSecret=mcp-gateway-secrets \
@@ -35,7 +41,7 @@ helm install mcp-gateway charts/local-mcp-gateway \
 ## Quick start (kind / local dev)
 
 ```bash
-helm install mcp charts/local-mcp-gateway \
+helm install mcp charts/mcp-gateway \
   --set route.enabled=false --set ingress.enabled=true \
   --set secret.create=true \
   --set secret.values.GATEWAY_ENCRYPTION_KEY=dev-encryption-key-1234567890 \

@@ -1,9 +1,9 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: {{ include "local-mcp-gateway.fullname" . }}
+  name: {{ include "mcp-gateway.fullname" . }}
   labels:
-    {{- include "local-mcp-gateway.labels" . | nindent 4 }}
+    {{- include "mcp-gateway.labels" . | nindent 4 }}
   {{- with .Values.commonAnnotations }}
   annotations:
     {{- toYaml . | nindent 4 }}
@@ -16,4 +16,4 @@ spec:
       targetPort: http
       protocol: TCP
   selector:
-    {{- include "local-mcp-gateway.selectorLabels" . | nindent 4 }}
+    {{- include "mcp-gateway.selectorLabels" . | nindent 4 }}
