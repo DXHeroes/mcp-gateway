@@ -8,8 +8,8 @@ description: |
 type: application
 # Chart and application use the same Gateway product version. Production
 # deployments should still pin image.digest rather than relying on the tag.
-version: 1.1.1-beta.1
-appVersion: "1.1.1-beta.1"
+version: 1.1.2-beta.1
+appVersion: "1.1.2-beta.1"
 kubeVersion: ">=1.25.0-0"
 keywords:
   - mcp
