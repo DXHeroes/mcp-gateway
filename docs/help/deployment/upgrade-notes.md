@@ -23,9 +23,10 @@ WORKSPACE_CONSOLIDATE_CONFIRM=DELETE_OTHER_WORKSPACES
 ```
 
 Find and copy the survivor ID from the Workspace page before the deployment. Consolidation moves
-members of deleted workspaces to the survivor as `member`, repoints their active sessions, and
-deletes every MCP connection and dependent credential owned by affected users. It runs in one
-transaction; an unknown survivor or one with no owner aborts without deleting data. Remove both
+members of deleted workspaces to the survivor as `member` and repoints their active sessions. It
+deletes the non-survivor workspaces and their workspace-scoped data; **MCP connections, profiles and
+user credentials in the surviving workspace are not touched**. It runs in one transaction; an
+unknown survivor or one with no owner aborts without deleting data. Remove both
 `WORKSPACE_CONSOLIDATE_*` variables after the successful boot. `WORKSPACE_CONSOLIDATE_KEEP_SLUG`
 is an alternative selector when the target is known by slug; never set it together with the ID.
 `TENANCY_MODE` remains a deprecated
