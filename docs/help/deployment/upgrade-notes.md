@@ -9,6 +9,28 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
+## Unreleased — `WORKSPACE_MODE` defaults to single
+
+**Action required for existing multi-workspace deployments.** `WORKSPACE_MODE=single` is now the
+default for both editions. A database previously initialized for multi-workspace operation refuses
+to start until you explicitly set `WORKSPACE_MODE=multi`, or deliberately consolidate to one
+workspace with the deployment-only variables below:
+
+```bash
+WORKSPACE_MODE=single
+WORKSPACE_CONSOLIDATE_KEEP_ID=<immutable-workspace-id>
+WORKSPACE_CONSOLIDATE_CONFIRM=DELETE_OTHER_WORKSPACES
+```
+
+Find and copy the survivor ID from the Workspace page before the deployment. Consolidation moves
+members of deleted workspaces to the survivor as `member`, repoints their active sessions, and
+deletes every MCP connection and dependent credential owned by affected users. It runs in one
+transaction; an unknown survivor or one with no owner aborts without deleting data. Remove both
+`WORKSPACE_CONSOLIDATE_*` variables after the successful boot. `WORKSPACE_CONSOLIDATE_KEEP_SLUG`
+is an alternative selector when the target is known by slug; never set it together with the ID.
+`TENANCY_MODE` remains a deprecated
+compatibility alias; do not set it to a conflicting mode.
+
 **Coming from 0.2.x or earlier?** Apply the sections in order: 0.3.0, then 0.4.0, then 0.6.0, then
 0.7.0. 0.5.0 needs no action. Start with the 0.3.0 image rename below — before 0.3.0 the image was
 `devdxheroes/mcp-gateway` and carried moving `latest` and `stable` tags, neither of which exists

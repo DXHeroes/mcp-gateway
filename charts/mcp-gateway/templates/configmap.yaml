@@ -31,6 +31,15 @@ data:
   {{- with .Values.config.authSignupMode }}
   AUTH_SIGNUP_MODE: {{ . | quote }}
   {{- end }}
+  {{- with .Values.config.workspaceMode }}
+  WORKSPACE_MODE: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.workspaceConsolidateKeepId }}
+  WORKSPACE_CONSOLIDATE_KEEP_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.workspaceConsolidateConfirm }}
+  WORKSPACE_CONSOLIDATE_CONFIRM: {{ . | quote }}
+  {{- end }}
   {{- with .Values.config.tenancyMode }}
   TENANCY_MODE: {{ . | quote }}
   {{- end }}

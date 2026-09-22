@@ -12,7 +12,7 @@ There are two ways to connect Slack. Pick one before you start.
 Most setups want **A**. Pick **B** only if you need Slack messages to come from a bot rather than
 from a person, because [Slack's MCP server](https://docs.slack.dev/ai/slack-mcp-server/) only
 works with personal accounts. In CE you can save one REST/OpenAPI connection, and only an
-organization owner can create it.
+workspace owner can create it.
 
 ---
 
@@ -73,9 +73,9 @@ Everyone now connects their own Slack account under **My connections**. See
 ## B. REST API (OpenAPI)
 
 Talks to the [Slack Web API](https://docs.slack.dev/apis/web-api/) directly, as one bot for the
-whole organization. This route is for developers: you supply the API description yourself.
+whole workspace. This route is for developers: you supply the API description yourself.
 
-**You need:** the organization owner role in the gateway, and an OpenAPI 3.x document describing
+**You need:** the workspace owner role in the gateway, and an OpenAPI 3.x document describing
 the Slack methods you want to use. Slack's published
 [`slack-api-specs`](https://github.com/slackapi/slack-api-specs) is archived and uses an older
 format, so write a small document covering only the methods you need. The names and descriptions

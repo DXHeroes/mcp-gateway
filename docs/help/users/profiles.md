@@ -16,7 +16,7 @@ A connection you add under **Servers** does nothing on its own. It has to sit in
 4. Add one or more connections to it.
 5. Save.
 
-The profile lives in the organization you are working in. Switch organizations and it is not there.
+The profile lives in the workspace you are working in. Switch workspaces and it is not there.
 
 ## 2. Choose which tools appear
 
@@ -29,7 +29,7 @@ The same connection can look different in two profiles. See
 Every profile has its own address:
 
 ```
-https://<your-gateway-host>/api/mcp/<org-slug>/<profile-name>
+https://<your-gateway-host>/api/mcp/<workspace-slug>/<profile-name>
 ```
 
 Paste it into the MCP client (Claude, Cursor and so on). The AI signs in as you the first time. For
@@ -43,7 +43,7 @@ https://<your-gateway-host>/api/mcp/gateway
 ```
 
 Set the default under **Profiles** → **Gateway endpoint**. Marking a profile as default shares it
-with the whole organization, and everyone calling this address uses that profile's stored
+with the whole workspace, and everyone calling this address uses that profile's stored
 credentials. Pick one you are happy to hand to every member.
 
 ## How to split them up
