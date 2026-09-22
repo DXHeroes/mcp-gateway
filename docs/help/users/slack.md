@@ -63,7 +63,7 @@ If one is missing, connecting fails with `invalid_scope`. See
 1. **Servers** → **Catalog** → **Community presets** → **Slack** → **Add to my servers**.
 2. Paste the client ID and client secret.
 3. Leave the credential mode on **per-user**.
-4. **Create server**, then assign it to a profile.
+4. **Create server**, then add it to a [profile](./profiles.md).
 
 Everyone now connects their own Slack account under **My connections**. See
 [Service credentials](./per-user-connections.md).
@@ -73,35 +73,52 @@ Everyone now connects their own Slack account under **My connections**. See
 ## B. REST API (OpenAPI)
 
 Talks to the [Slack Web API](https://docs.slack.dev/apis/web-api/) directly, as one bot for the
-whole organization. This route is for developers: you have to supply the API description yourself.
+whole organization. This route is for developers: you supply the API description yourself.
 
 **You need:** the organization owner role in the gateway, and an OpenAPI 3.x document describing
-the Slack methods you want to use.
+the Slack methods you want to use. Slack's published
+[`slack-api-specs`](https://github.com/slackapi/slack-api-specs) is archived and uses an older
+format, so write a small document covering only the methods you need. The names and descriptions
+you put in it are what the AI reads, so make them clear.
 
 ### 1. Get the bot token
 
 In [api.slack.com/apps](https://api.slack.com/apps), on the same app or a new one:
 
 1. **OAuth & Permissions** → **Bot Token Scopes**: add a scope for each thing the bot should do
-   (`chat:write` to post messages, `channels:read` to list channels, and so on).
+   (`chat:write` to post messages, `channels:read` to list channels).
 2. **Install App** → **Install to Workspace**.
 3. Copy the **Bot User OAuth Token**. It starts with `xoxb-`.
 4. In Slack, invite the bot to every channel it should work in. It cannot see anything else.
 
-### 2. Prepare a spec
-
-Slack's published [`slack-api-specs`](https://github.com/slackapi/slack-api-specs) is archived and
-uses an older format, so it cannot be imported as it is. Write a small OpenAPI 3.x document
-covering only the methods you need. The names and descriptions you put in it are what the AI
-reads, so make them clear.
-
-### 3. Create the connection
+### 2. Create the connection
 
 1. **Servers** → **Add server** → **Advanced, for developers** → type **REST API (OpenAPI)**.
 2. Paste the spec or give a URL, click **Load spec**, then pick the operations to expose.
 3. Base URL: `https://slack.com/api/`
 4. Auth: an **API key** in a header, name `Authorization`, value `Bearer xoxb-your-token`.
-5. Save, then assign the server to a profile.
+5. **Create server**.
+
+### 3. Set it up for autonomous runs
+
+A scheduled job has nobody to ask, so approvals have to be gone before it runs.
+
+1. **Profiles** → [create a profile](./profiles.md), or open an existing one,
+   and add the Slack server to it.
+2. Open the server on the profile page and set every tool the job will use to **Allow**.
+3. Turn off **Ask user (Claude)** on those tools. Left on, the run stops and waits.
+4. In the profile's **API Keys** panel, **Generate key** and copy the secret. It starts with
+   `mcp_api_` and is shown only once. API keys are an [Enterprise feature](./editions.md).
+
+### 4. Give the key to the job
+
+Put the address and the key in the job's MCP client config. Keep the key in a CI secret, a
+`.env` file or your password manager, never in the repository.
+
+```
+URL:    https://<your-gateway-host>/api/mcp/<org-slug>/<profile-name>
+Header: Authorization: Bearer mcp_api_…
+```
 
 ### Good to know
 
@@ -109,23 +126,25 @@ reads, so make them clear.
   as an error code, so describe the `ok` and `error` fields in your spec.
 - **No file uploads.** Only methods that accept plain JSON work.
 - **Most tools start on "Needs approval".** Slack uses POST for nearly everything, including
-  reads, and the gateway treats POST as a write. Change this under
-  [Tool permissions](./tool-customization.md).
+  reads, and the gateway treats POST as a write.
 
 ---
 
 ## Troubleshooting
 
-| Problem | What it means |
-| --- | --- |
-| `bad_redirect_uri` | The redirect URL in Slack does not exactly match `https://<gateway>/api/oauth/callback`. |
-| `invalid_scope` | One of the user token scopes is missing. |
-| The Slack approval page is blank | The app has no bot scope. See step 1. |
-| Slack says it is waiting for approval | Normal if your workspace restricts apps. An admin approves it once. |
-| A bot token is rejected by the preset | Expected. The preset only takes personal accounts; use route B. |
-| `missing_scope` on route B | The bot token is missing a scope. Add it and reinstall the app. |
-| `channel_not_found` or `not_in_channel` | The bot was never invited to that channel. |
-| Calls look fine but nothing happens | Slack reported an error inside the response. See "Good to know". |
+| Route | Problem | What it means |
+| --- | --- | --- |
+| A | `bad_redirect_uri` | The redirect URL in Slack does not exactly match `https://<gateway>/api/oauth/callback`. |
+| A | `invalid_scope` | One of the user token scopes is missing. |
+| A | The Slack approval page is blank | The app has no bot scope. See step 1. |
+| A | Slack says it is waiting for approval | Normal if your workspace restricts apps. An admin approves it once. |
+| A | A bot token is rejected by the preset | Expected. The preset only takes personal accounts; use route B. |
+| B | `not_authed` or `invalid_auth` | The header is missing or malformed. It has to be `Authorization: Bearer xoxb-…`. |
+| B | `missing_scope` | The bot token is missing a scope. Add it and reinstall the app. |
+| B | `channel_not_found` or `not_in_channel` | The bot was never invited to that channel. |
+| B | Calls look fine but nothing happens | Slack reported an error inside the response. See "Good to know". |
+| B | The gateway answers `401` | The key expired, was deleted, or belongs to a different profile. |
+| B | A call waits forever | The tool is still on **Needs approval**, or **Ask user (Claude)** is on. |
 
 ## More from Slack
 
