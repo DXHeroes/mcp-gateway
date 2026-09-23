@@ -1,6 +1,6 @@
 # Editions and licenses
 
-CE includes all supported MCP protocols, the catalog and connectors, shared and per-user service credentials, password/MFA/Google/Microsoft login, all roles and sharing, tool permissions and approvals, configuration export, health and basic metrics. Limits: 25 active users, one organization, one saved REST/OpenAPI connection, one active gateway, at most seven days of activity/audit history. There is no commercial quota on MCP servers, profiles or tool calls.
+CE includes all supported MCP protocols, the catalog and connectors, shared and per-user service credentials, password/MFA/Google/Microsoft login, all roles and sharing, tool permissions and approvals, configuration export, health and basic metrics. Limits: 25 active users, one workspace, one saved REST/OpenAPI connection, one active gateway, at most seven days of activity/audit history. There is no commercial quota on MCP servers, profiles or tool calls.
 
 EE adds ADFS/group role mapping/external JWT, profile and management API keys, declarative configuration plan/apply, built-in log exports/alerts/incidents, automatic tool/specification drift checks, longer retention and multiple gateway replicas. Active-user capacity follows the signed license and may be unlimited. External identities count by verified issuer and subject; emails do not merge identities. Sessions and keys do not count separately.
 

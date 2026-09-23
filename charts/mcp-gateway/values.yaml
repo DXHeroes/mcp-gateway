@@ -132,14 +132,18 @@ config:
   authEmailPassword: "" # "false" to disable email/password login
   # Gates new-account creation for BOTH email/password and SSO (Google/Microsoft/ADFS).
   authSignupMode: "" # open | invite_only | closed
-  # Tenancy. Decide this before first boot: the mode is recorded in the database
-  # the first time the gateway starts, and there is no override variable.
-  # Narrowing later is the direction that can be foreclosed — booting
-  # single_tenant against a database that already holds more than one
-  # organization fails fast at startup, and there is no merge tool. Widening
-  # back (single_tenant, then multi_tenant again) IS allowed; the backend logs
-  # it at error level and writes a `tenancy_mode_changed` security-audit entry.
-  tenancyMode: "" # multi_tenant (default) | single_tenant
+  # Workspace mode. The gateway defaults to one workspace; set `multi` only
+  # for an intentional multi-workspace deployment. Existing multi-workspace
+  # databases must set this explicitly after upgrading.
+  workspaceMode: "" # single (default) | multi
+  # One-shot, destructive consolidation. Keep the immutable workspace ID shown
+  # on the Workspace page and use the exact confirmation literal. The gateway
+  # moves members to the survivor and deletes their MCP connections/credentials.
+  workspaceConsolidateKeepId: ""
+  workspaceConsolidateConfirm: "" # DELETE_OTHER_WORKSPACES
+  # Deprecated compatibility alias. Prefer workspaceMode; never set both to
+  # different values because the gateway rejects a conflicting deployment.
+  tenancyMode: "" # multi_tenant | single_tenant (deprecated)
   # OAuth / OIDC public identifiers (the matching client secrets go in the Secret).
   googleClientId: ""
   microsoftClientId: ""

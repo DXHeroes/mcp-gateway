@@ -54,7 +54,7 @@ docker run -d --name mcp-gateway-db --network mcp-gateway --restart unless-stopp
   postgres:17-alpine
 docker run -d --name mcp-gateway --network mcp-gateway --restart unless-stopped \
   --env-file gateway.env -p 127.0.0.1:3001:3001 \
-  dxheroes/mcp-gateway-ce:v1.1.1
+  dxheroes/mcp-gateway-ce:v1.2.0
 ```
 
 The gateway waits for the database and applies migrations itself, so a `connection refused` line
@@ -73,7 +73,7 @@ breaking change — those bump the major. Before 1.0.0 a minor may break compati
 exists. Pin a release or a digest for a deployment that never changes under you; pin a line when
 you want the updates automatically.
 
-To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v1.1.1` to `.env` (Compose) or
+To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v1.2.0` to `.env` (Compose) or
 use that name in the `docker run` command.
 
 The repositories also carry `vX.Y.Z-beta.N` builds and a moving `beta` tag from the development
