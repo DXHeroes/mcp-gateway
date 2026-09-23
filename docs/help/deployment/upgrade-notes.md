@@ -9,12 +9,14 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
-## Unreleased — `WORKSPACE_MODE` defaults to single
+## 1.2.0 — `WORKSPACE_MODE` defaults to single
 
-**Action required for existing multi-workspace deployments.** `WORKSPACE_MODE=single` is now the
-default for both editions. A database previously initialized for multi-workspace operation refuses
-to start until you explicitly set `WORKSPACE_MODE=multi`, or deliberately consolidate to one
-workspace with the deployment-only variables below:
+**Action required for every deployment that never set the mode.** `WORKSPACE_MODE=single` is now
+the default for both editions. Until this release the default was the opposite, and the first boot
+of any earlier version recorded it in `gateway_settings.tenancy_mode` — so a database carrying that
+recorded multi-workspace mode refuses to start until an operator chooses explicitly, **even when it
+holds a single workspace**. Set `WORKSPACE_MODE=multi` to keep things exactly as they are, or
+deliberately consolidate to one workspace with the deployment-only variables below:
 
 ```bash
 WORKSPACE_MODE=single
@@ -27,7 +29,9 @@ members of deleted workspaces to the survivor as `member` and repoints their act
 deletes the non-survivor workspaces and their workspace-scoped data; **MCP connections, profiles and
 user credentials in the surviving workspace are not touched**. It runs in one transaction; an
 unknown survivor or one with no owner aborts without deleting data. Remove both
-`WORKSPACE_CONSOLIDATE_*` variables after the successful boot. `WORKSPACE_CONSOLIDATE_KEEP_SLUG`
+`WORKSPACE_CONSOLIDATE_*` variables after the successful boot: consolidation is re-evaluated on
+**every** boot and the variables never clear themselves, so a pair left behind would consolidate
+again after any later restart — including one that follows a restore from backup. `WORKSPACE_CONSOLIDATE_KEEP_SLUG`
 is an alternative selector when the target is known by slug; never set it together with the ID.
 `TENANCY_MODE` remains a deprecated
 compatibility alias; do not set it to a conflicting mode.
@@ -42,10 +46,12 @@ any more, so the first thing to fix is the image reference itself.
 **No action required.** Nothing in a running deployment changes: no variable, no migration step,
 no image name. 1.0.0 is the same product as 0.7.x with a promise attached.
 
-From this release on, SemVer means what it says here: inside `v1` no configuration, API or
-behaviour change will break a working deployment. Anything that would, bumps the major and
-arrives with its own section in this file. Before 1.0.0 a breaking change could land in a minor,
-which is why 0.3.0, 0.4.0, 0.6.0 and 0.7.0 each have one above.
+From this release on, every release that needs an operator action has its own section in this
+file, and no release changes a deployment silently. That is the promise the version number
+carries — read it as "nothing changes without being written down here", not as "a minor is
+always safe to take unread". **1.2.0 above is a minor that needs an action**: it defaults
+`WORKSPACE_MODE` to `single`, and a deployment that never set the mode refuses to start until it
+sets one. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
 
 That is what makes the moving tags safe to pin:
 
@@ -56,7 +62,9 @@ That is what makes the moving tags safe to pin:
 | Only patches of one minor | `v1.2` |
 
 `v1` and `v1.2` move to the newest release of their line and resolve to a digest you can verify
-exactly as before. There is still no `latest`, and no `v0`: before 1.0.0 a minor could break
+exactly as before — but a moving tag can carry a deployment across a release that needs an
+action, so read the sections above before you let it. A deployment nobody is watching belongs on
+a digest or an exact version. There is still no `latest`, and no `v0`: before 1.0.0 a minor could break
 compatibility, so that line was never published. The Helm chart carries the same lines without
 the `v` (`--version 1`).
 
