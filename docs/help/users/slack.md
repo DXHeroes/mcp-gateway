@@ -105,9 +105,9 @@ A scheduled job has nobody to ask, so approvals have to be gone before it runs.
 
 1. **Profiles** → [create a profile](./profiles.md), or open an existing one,
    and add the Slack server to it.
-2. Open the server on the profile page and set every tool the job will use to **Allow**.
-3. Turn off **Ask user (Claude)** on those tools. Left on, the run stops and waits.
-4. In the profile's **API Keys** panel, **Generate key** and copy the secret. It starts with
+2. Open the server on the profile page and set every tool the job will use to **Allow**. Any
+   **Needs approval** option, including **Claude asks**, makes the run stop and wait.
+3. In the profile's **API Keys** panel, **Generate key** and copy the secret. It starts with
    `mcp_api_` and is shown only once. API keys are an [Enterprise feature](./editions.md).
 
 ### 4. Give the key to the job
@@ -144,7 +144,7 @@ Header: Authorization: Bearer mcp_api_…
 | B | `channel_not_found` or `not_in_channel` | The bot was never invited to that channel. |
 | B | Calls look fine but nothing happens | Slack reported an error inside the response. See "Good to know". |
 | B | The gateway answers `401` | The key expired, was deleted, or belongs to a different profile. |
-| B | A call waits forever | The tool is still on **Needs approval**, or **Ask user (Claude)** is on. |
+| B | A call waits forever | The tool is still on **Needs approval**, including **Claude asks**. |
 
 ## More from Slack
 
