@@ -9,6 +9,17 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
+## 1.3.0 — REST API tools carry their full description
+
+**REST API (OpenAPI) connections report changed operations once. No action required.** A tool's
+description used to be the operation's `summary` alone, and the longer `description` was dropped
+whenever a summary existed. It is now both, summary first. The description is part of the value
+the gateway compares to detect spec changes, so every operation that has both fields shows up as
+**changed** on its next re-import, and a URL-sourced server with the periodic check on shows the
+*"Spec changed, review"* banner once. Review and apply the re-import to serve the fuller
+descriptions; until then the server keeps serving the old ones. Your tool selections, renames,
+rewritten descriptions and permission settings survive the re-import.
+
 ## 1.2.0 — `WORKSPACE_MODE` defaults to single
 
 **Action required for every deployment that never set the mode.** `WORKSPACE_MODE=single` is now
