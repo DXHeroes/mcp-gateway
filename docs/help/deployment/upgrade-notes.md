@@ -9,6 +9,61 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
+## 2.0.0 — `toolPrefix` no longer accepts the underscore
+
+**Action required for every deployment whose declarative config or API clients set a tool name
+prefix containing `_`.** A prefix may now contain only letters, digits and hyphens. The rule is
+enforced in four places: the server form, `POST /api/mcp-servers`, `PATCH /api/mcp-servers/:id`
+and the declarative document applied through `POST /api/config/apply`.
+
+The underscore is the separator the gateway puts between the prefix and the tool name
+(`TOOL_PREFIX_SEPARATOR = '_'`, with `__` still accepted as the legacy spelling), so a prefix
+`my_server` exposed `my_server_search` — a name that also reads as prefix `my`, tool
+`server_search`. Which one a client resolved depended on where the split was attempted.
+
+**Stored servers are renamed on the first boot.** Data migration
+`007_tool-prefix-underscore-to-hyphen` rewrites every `_` in a stored prefix to `-`
+(`my_server` → `my-server`), and every tool the server exposes is renamed with it
+(`my_server_search` → `my-server_search`). Clients that pinned tool names need updating, so
+schedule the upgrade with them rather than into a quiet window. To see which rows it will touch,
+run this before the upgrade:
+
+```sql
+SELECT id, name, tool_prefix FROM mcp_servers WHERE strpos(tool_prefix, '_') > 0;
+```
+
+The one exception is a rename that would give the server the same prefix as another server in a
+profile they share (`a_b` next to an existing `a-b`), because both would then expose the same tool
+names. That row is left unchanged and named in the migration log (`Left N prefix(es) unchanged …`).
+It keeps working, but the edit form refuses to save it until an admin gives it a prefix without
+the underscore.
+
+The migration renames stored rows, not the files you apply. Rename every affected prefix in your
+declarative documents and API clients too, with the same `_` → `-` rewrite so an apply does not
+rename the tools a second time:
+
+```yaml
+# before
+servers:
+  - name: figma
+    toolPrefix: my_server
+# after
+servers:
+  - name: figma
+    toolPrefix: my-server
+```
+
+What happens if you do not:
+
+- **GitOps / `config apply`** fails the whole document with an error naming the offending server
+  (`Server "figma": toolPrefix "my_server" may only contain letters, digits and hyphens …`).
+  `config export` round-trips the stored prefix, so an export taken before the upgrade and applied
+  after it fails the same way.
+- **Deleting the `toolPrefix` line is not the smaller fix it looks like.** `config apply` sends a
+  prefix for every server it writes, so an omitted line is applied as *no prefix* and the stored
+  one is cleared — which renames every tool of that server a second time. Use the hyphenated
+  prefix the migration wrote instead.
+
 ## 1.3.0 — REST API tools carry their full description
 
 **REST API (OpenAPI) connections report changed operations once. No action required.** A tool's
