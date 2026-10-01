@@ -5,7 +5,7 @@ services:
     name: mcp-gateway
     runtime: image
     image:
-      url: docker.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.20
+      url: docker.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.21
     plan: starter
     healthCheckPath: /api/health/ready
     # CE runs one instance; a second one refuses to start (CE_INSTANCE_LIMIT). Render stops a
