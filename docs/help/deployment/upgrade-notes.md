@@ -9,7 +9,7 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
-## 2.0.0 — `toolPrefix` no longer accepts the underscore
+## 1.5.0 — `toolPrefix` no longer accepts the underscore
 
 **Action required for every deployment whose declarative config or API clients set a tool name
 prefix containing `_`.** A prefix may now contain only letters, digits and hyphens. The rule is
@@ -115,9 +115,10 @@ no image name. 1.0.0 is the same product as 0.7.x with a promise attached.
 From this release on, every release that needs an operator action has its own section in this
 file, and no release changes a deployment silently. That is the promise the version number
 carries — read it as "nothing changes without being written down here", not as "a minor is
-always safe to take unread". **1.2.0 above is a minor that needs an action**: it defaults
-`WORKSPACE_MODE` to `single`, and a deployment that never set the mode refuses to start until it
-sets one. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
+always safe to take unread". **1.2.0 and 1.5.0 above are minors that need an action**: 1.2.0
+defaults `WORKSPACE_MODE` to `single`, and a deployment that never set the mode refuses to start
+until it sets one; 1.5.0 renames every stored tool prefix that contains `_`, and with it every tool
+that server exposes. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
 
 That is what makes the moving tags safe to pin:
 

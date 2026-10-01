@@ -9,7 +9,7 @@ spec:
         registry_type: DOCKER_HUB
         registry: dxheroes
         repository: mcp-gateway-ce
-        tag: v1.5.0-beta.21
+        tag: v1.5.0-beta.22
       http_port: 3001
       # CE runs one instance; a second one refuses to start (CE_INSTANCE_LIMIT).
       instance_count: 1
