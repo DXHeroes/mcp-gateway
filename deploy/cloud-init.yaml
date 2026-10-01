@@ -1,0 +1,18 @@
+#cloud-config
+# DXH Gateway Community Edition on a new Ubuntu LTS server: paste this file as the user data of
+# a DigitalOcean Droplet, a Hetzner Cloud server, an AWS Lightsail instance or any VPS that runs
+# cloud-init.
+#
+# Before you do:
+# 1. Read the CE terms: https://github.com/DXHeroes/mcp-gateway/blob/main/LICENSE-CE.txt
+#    The command below accepts them (GATEWAY_CE_TERMS_ACCEPTED).
+# 2. Replace gateway.example.com with your host name, point its DNS record at the server, and
+#    allow ports 80 and 443 in the provider's firewall: Caddy obtains the certificate over them.
+#
+# Progress: ssh to the server and run tail -f /var/log/cloud-init-output.log
+# The installation lives in /opt/mcp-gateway. To upgrade, run the same command again as root.
+runcmd:
+  - >-
+    curl -fsSL https://raw.githubusercontent.com/DXHeroes/mcp-gateway/beta/install.sh
+    | GATEWAY_CE_TERMS_ACCEPTED=2026-09-18.1 sh -s --
+    --install-docker --dir /opt/mcp-gateway --domain gateway.example.com

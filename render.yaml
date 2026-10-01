@@ -1,0 +1,40 @@
+# Render Blueprint for DXH Gateway Community Edition, opened by the "Deploy to Render" button in
+# README.md. Read deploy/README.md first: Render asks for PUBLIC_URL and the CE terms acceptance.
+services:
+  - type: web
+    name: mcp-gateway
+    runtime: image
+    image:
+      url: docker.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.18
+    plan: starter
+    healthCheckPath: /api/health/ready
+    # CE runs one instance; a second one refuses to start (CE_INSTANCE_LIMIT). Render stops a
+    # service with a disk before it starts the new version, so an upgrade never runs two at once.
+    # Nothing is stored on the disk.
+    disk:
+      name: data
+      mountPath: /var/lib/mcp-gateway
+      sizeGB: 1
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mcp-gateway-db
+          property: connectionString
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: GATEWAY_ENCRYPTION_KEY
+        generateValue: true
+      - key: PUBLIC_URL
+        sync: false
+      - key: GATEWAY_CE_TERMS_ACCEPTED
+        sync: false
+      - key: PORT
+        value: "3001"
+      - key: MCP_ALLOW_PRIVATE_NETWORK_TARGETS
+        value: "false"
+databases:
+  - name: mcp-gateway-db
+    databaseName: gateway
+    user: gateway
+    plan: basic-256mb
+    postgresMajorVersion: "17"

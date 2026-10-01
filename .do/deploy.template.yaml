@@ -1,0 +1,41 @@
+# DigitalOcean App Platform template for DXH Gateway Community Edition, opened by the
+# "Deploy to DigitalOcean" button in README.md. Read deploy/README.md first: the app needs a
+# PostgreSQL database you create beforehand (DATABASE_URL), and an upgrade stops it briefly.
+spec:
+  name: mcp-gateway
+  services:
+    - name: gateway
+      image:
+        registry_type: DOCKER_HUB
+        registry: dxheroes
+        repository: mcp-gateway-ce
+        tag: v1.5.0-beta.18
+      http_port: 3001
+      # CE runs one instance; a second one refuses to start (CE_INSTANCE_LIMIT).
+      instance_count: 1
+      instance_size_slug: apps-s-1vcpu-1gb
+      health_check:
+        http_path: /api/health/ready
+        initial_delay_seconds: 30
+        period_seconds: 10
+        timeout_seconds: 5
+        failure_threshold: 6
+      # App Platform asks for every variable without a value when you create the app.
+      envs:
+        - key: PUBLIC_URL
+          scope: RUN_TIME
+          value: ${APP_URL}
+        - key: DATABASE_URL
+          scope: RUN_TIME
+          type: SECRET
+        - key: AUTH_SECRET
+          scope: RUN_TIME
+          type: SECRET
+        - key: GATEWAY_ENCRYPTION_KEY
+          scope: RUN_TIME
+          type: SECRET
+        - key: GATEWAY_CE_TERMS_ACCEPTED
+          scope: RUN_TIME
+        - key: MCP_ALLOW_PRIVATE_NETWORK_TARGETS
+          scope: RUN_TIME
+          value: "false"

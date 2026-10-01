@@ -1,6 +1,6 @@
 # DXH Gateway
 
-> **Beta branch.** These materials install `v1.5.0-beta.17`, a pre-release build of the
+> **Beta branch.** These materials install `v1.5.0-beta.18`, a pre-release build of the
 > next version from the development branch, for trying a change before it is released. It is
 > not a supported release. For production, use the
 > [`main` branch](https://github.com/DXHeroes/mcp-gateway) and its release tags.
@@ -10,6 +10,35 @@ give every AI client exactly the tools it needs, with permissions, approvals and
 
 This repository holds installation materials and public documentation for the Community Edition
 (CE) container image. Service source is private.
+
+## Install with one command
+
+On a Linux server or a Mac with Docker:
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/DXHeroes/mcp-gateway/beta/install.sh | sh
+```
+
+The installer asks you to accept the [CE terms](LICENSE-CE.txt), writes `mcp-gateway/.env` with
+generated secrets and starts the newest release with Docker Compose. Add a domain to serve it over
+HTTPS with a Let's Encrypt certificate (its DNS must point at the server, ports 80 and 443 open):
+
+```sh
+curl -fsSL https://raw.githubusercontent.com/DXHeroes/mcp-gateway/beta/install.sh | sh -s -- --domain gateway.example.com
+```
+
+Running it again upgrades the installation and keeps `.env` and the data. To read the script
+first, download it with `curl -fsSLO …/install.sh` and run `sh install.sh`; `sh install.sh --help`
+lists the options.
+
+On a hosted platform, read its guide first, because each one asks for values only you can give:
+
+[![Deploy to DigitalOcean](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/DXHeroes/mcp-gateway/tree/main)
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/DXHeroes/mcp-gateway)
+
+[Deploy guides](deploy/README.md): a VPS or Droplet (including a cloud-init file for a new
+server), DigitalOcean App Platform, Render, Railway and Fly.io, and why Vercel and other
+serverless platforms cannot run the gateway.
 
 ## Quick start with Docker Compose
 
@@ -59,7 +88,7 @@ docker run -d --name mcp-gateway-db --network mcp-gateway --restart unless-stopp
   postgres:17-alpine
 docker run -d --name mcp-gateway --network mcp-gateway --restart unless-stopped \
   --env-file gateway.env -p 127.0.0.1:3001:3001 \
-  dxheroes/mcp-gateway-ce:v1.5.0-beta.17
+  dxheroes/mcp-gateway-ce:v1.5.0-beta.18
 ```
 
 The gateway waits for the database and applies migrations itself, so a `connection refused` line
@@ -78,7 +107,7 @@ breaking change — those bump the major. Before 1.0.0 a minor may break compati
 exists. Pin a release or a digest for a deployment that never changes under you; pin a line when
 you want the updates automatically.
 
-To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.17` to `.env` (Compose) or
+To use GHCR, add `GATEWAY_IMAGE=ghcr.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.18` to `.env` (Compose) or
 use that name in the `docker run` command.
 
 The repositories also carry `vX.Y.Z-beta.N` builds and a moving `beta` tag from the development
@@ -113,8 +142,9 @@ for profiles, tool permissions and approvals.
 
 ## Update, stop, remove
 
-- **Update (Compose):** download `compose.yaml` again and run `docker compose up -d --wait`. The
-  new image migrates the database on start. Back up the database before you update.
+- **Update (Compose):** download `compose.yaml` again and run `docker compose up -d --wait`, or
+  run the installer again if it made the installation. The new image migrates the database on
+  start. Back up the database before you update.
 - **Update (`docker run`):** `docker rm -f mcp-gateway`, then run the gateway command again with the
   new tag.
 - **Stop:** `docker compose down`, or `docker stop mcp-gateway mcp-gateway-db`. Data stays in the
@@ -124,8 +154,8 @@ for profiles, tool permissions and approvals.
 
 ## Before you go to production
 
-- Put the gateway behind a TLS reverse proxy and set `PUBLIC_URL` to its address. The defaults
-  publish port 3001 on loopback only.
+- Put the gateway behind a TLS reverse proxy and set `PUBLIC_URL` to its address (the installer's
+  `--domain` does both with Caddy). The defaults publish port 3001 on loopback only.
 - After the owner account exists, set `AUTH_SIGNUP_MODE=invite_only` and restart.
 - Pin the image by digest from `release.json` and verify its signature: see
   [image verification](docs/help/deployment/image-verification.md).
