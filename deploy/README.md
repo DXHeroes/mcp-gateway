@@ -192,7 +192,7 @@ without downtime and the new copy would stop with `CE_INSTANCE_LIMIT`.
 
 1. In a new project, add **PostgreSQL**. These steps assume the database service is named
    `Postgres`.
-2. Add a service from the Docker image `docker.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.26`.
+2. Add a service from the Docker image `docker.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.27`.
 3. In its **Settings**: generate a public domain for port 3001, set the health check path to
    `/api/health/ready`, and keep one replica.
 4. Attach a **volume** to it, mounted at `/var/lib/mcp-gateway`. Nothing is stored there; Railway
@@ -223,7 +223,7 @@ app = "my-mcp-gateway"
 primary_region = "fra"
 
 [build]
-  image = "docker.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.26"
+  image = "docker.io/dxheroes/mcp-gateway-ce:v1.5.0-beta.27"
 
 [env]
   PUBLIC_URL = "https://my-mcp-gateway.fly.dev"
