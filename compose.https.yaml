@@ -1,0 +1,22 @@
+# HTTPS for compose.yaml: Caddy obtains and renews a Let's Encrypt certificate for the host in
+# PUBLIC_URL and forwards to the gateway. The installer enables it with --domain, by writing
+# PUBLIC_URL=https://<host> and COMPOSE_FILE=compose.yaml:compose.https.yaml into .env.
+# DNS for the host must point at this machine, and ports 80 and 443 must be reachable from the
+# internet: the certificate is issued over them.
+services:
+  caddy:
+    image: caddy:2.11.4-alpine@sha256:6aeddd44c3078b0f9a35206472a11420648a79c184603ef95957d0a20044cb2b
+    restart: unless-stopped
+    command: caddy reverse-proxy --from ${PUBLIC_URL:?} --to gateway:3001
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      - gateway
+volumes:
+  caddy_data:
+  caddy_config:

@@ -2,7 +2,11 @@
 
 CE runs one active gateway with PostgreSQL. The quick start in the repository README is the
 shortest path: it downloads `compose.yaml`, writes `.env` with generated secrets and the terms
-acceptance, and starts the release image named in `compose.yaml`. For a production installation:
+acceptance, and starts the release image named in `compose.yaml`. On a server, the
+[installer](https://github.com/DXHeroes/mcp-gateway/blob/main/install.sh) does the same with one
+command and can add HTTPS for a domain; the
+[deploy guides](https://github.com/DXHeroes/mcp-gateway/blob/main/deploy/README.md) cover a VPS,
+DigitalOcean App Platform, Render, Railway and Fly.io. For a production installation:
 
 Read `LICENSE-CE.txt`. The administrator accepts it by setting `GATEWAY_CE_TERMS_ACCEPTED` to the
 version it names, `2026-09-18.1`. Accepting the terms confirms the use is eligible: production in a

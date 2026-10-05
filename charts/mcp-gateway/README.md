@@ -46,7 +46,7 @@ helm install mcp charts/mcp-gateway \
   --set route.enabled=false --set ingress.enabled=true \
   --set secret.create=true \
   --set secret.values.GATEWAY_ENCRYPTION_KEY=dev-encryption-key-1234567890 \
-  --set secret.values.DATABASE_URL=postgresql://postgres:postgres@host:5432/local_mcp_gateway
+  --set secret.values.DATABASE_URL=postgresql://postgres:postgres@host:5432/mcp_gateway
 ```
 
 ## Key values
