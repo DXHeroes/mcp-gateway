@@ -9,7 +9,13 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
-## 1.5.0 — `toolPrefix` no longer accepts the underscore
+## 1.5.0 — `toolPrefix` no longer accepts the underscore; the gateway reports itself as `mcp-gateway`
+
+Two changes need action. The tool prefix applies to every deployment whose declarative config or
+API clients set a prefix containing `_`; the rename applies wherever something outside the
+gateway selects on the names it reports. Both are made in the same upgrade.
+
+### `toolPrefix` no longer accepts the underscore
 
 **Action required for every deployment whose declarative config or API clients set a tool name
 prefix containing `_`.** A prefix may now contain only letters, digits and hyphens. The rule is
@@ -63,6 +69,79 @@ What happens if you do not:
   prefix for every server it writes, so an omitted line is applied as *no prefix* and the stored
   one is cleared — which renames every tool of that server a second time. Use the hyphenated
   prefix the migration wrote instead.
+
+### The gateway reports itself as `mcp-gateway`
+
+**Action required wherever a dashboard, saved query, alert rule, log filter or access rule selects
+on the names below.** Nothing inside the gateway stops working, and its database, data and
+endpoints do not change. What changes is the name it reports to other systems, so anything there
+written against the old name stops matching at the upgrade: a dashboard shows the gateway going
+quiet, and an alert that fires on missing data fires.
+
+| Where the name appears | Before | After | To keep the old value |
+|---|---|---|---|
+| OpenTelemetry `service.name`, global export (Path 1) | `local-mcp-gateway` | `mcp-gateway` | `OTEL_SERVICE_NAME=local-mcp-gateway` |
+| OpenTelemetry `service.name`, per-organization SIEM export (Path 2) | `local-mcp-gateway`, whatever `OTEL_SERVICE_NAME` said | `mcp-gateway`, or `OTEL_SERVICE_NAME` when set | `OTEL_SERVICE_NAME=local-mcp-gateway` |
+| OpenTelemetry meter and logger scope (Path 1) | `local-mcp-gateway.proxy` | `mcp-gateway.proxy` | not configurable |
+| OpenTelemetry scope (Path 2) | `local-mcp-gateway.observability` | `mcp-gateway.observability` | not configurable |
+| MCP `clientInfo` sent to remote MCP servers, in their logs | `local-mcp-gateway`, version `1.0.0` | `mcp-gateway`, version of the last stable release | not configurable |
+| MCP `serverInfo` the gateway answers its own MCP clients with | the previous product name, version `0.16.0` | `mcp-gateway`, title `DXH Gateway`, the gateway's own version | not configurable |
+| PostgreSQL `application_name` of the built-in `postgres` server, in `pg_stat_activity` | `local-mcp-gateway` | `mcp-gateway` | not configurable |
+| OAuth Dynamic Client Registration `client_name`, new registrations only | the previous product name | `mcp-gateway` | the connection's **DCR client name** field |
+
+**`OTEL_SERVICE_NAME` now applies to the SIEM export too.** Path 2 used to report
+`local-mcp-gateway` regardless of the variable, so a deployment that already sets it sees Path 2
+move to that value with this upgrade, not to `mcp-gateway`. Setting
+`OTEL_SERVICE_NAME=local-mcp-gateway` keeps both paths on the old `service.name`; the scope names
+identify the instrumentation rather than the deployment and follow the rename either way.
+
+**MCP clients see a new server identity.** A client that displays `serverInfo.title` shows
+DXH Gateway, one that displays only `name` shows `mcp-gateway`. A modern-era client that caches
+responses per server identity starts that cache over once with the upgrade, and again with every
+release, because the version is now the gateway's own rather than a fixed `0.16.0`.
+
+**A new OAuth registration is made under `mcp-gateway`.** A connection that already has a
+registered client keeps it and is not affected: the gateway sends a `client_name` only when it
+registers. A provider that admits registrations only from allowlisted client names, and admitted
+the previous one, refuses a new registration under `mcp-gateway`. Allowlist the new name there, or
+enter the name the provider shows for the gateway's existing registrations in the connection's
+**DCR client name** field before you click **Authorize**.
+
+### The product is called DXH Gateway wherever a person reads its name
+
+**No action required.** The browser tab, the help, the invitation text the UI offers to copy and
+the title of the Management API document say DXH Gateway. Two of these leave the gateway:
+
+- **The invitation email sender** is `DXH Gateway <noreply@example.com>` when `RESEND_FROM` is
+  not set. A deployment that sets `RESEND_FROM` is unaffected.
+- **The authenticator app label** for two-factor authentication is DXH Gateway for a user who
+  enrolls after the upgrade. Entries enrolled earlier keep their label and keep working: the label
+  is not part of the secret.
+
+A client generated from the OpenAPI document that derives a name from its title gets a new one on
+regeneration; the paths and schemas are unchanged.
+
+### New installations default to the database `mcp_gateway`
+
+**No action required — and do not change your `DATABASE_URL`.** The install guides, both compose
+files, `.env.example` and the chart's development values now name the default database
+`mcp_gateway` instead of `local_mcp_gateway`. A running deployment keeps the database its
+`DATABASE_URL` names; nothing is renamed or migrated.
+
+**Do not paste the new default over an existing installation.** At startup the gateway creates the
+database `DATABASE_URL` names when it does not exist. Point it at `mcp_gateway` while your data is
+in `local_mcp_gateway`, and the gateway starts healthy on a new, empty database with no
+workspaces, MCP servers or profiles. Nothing is lost: set `DATABASE_URL` back to
+`local_mcp_gateway` and restart. The same happens when an `.env` is replaced with a fresh copy of
+`.env.example`. `POSTGRES_DB` in the compose files is read only when the PostgreSQL volume is
+created, so on an existing volume changing it does nothing.
+
+### The catalog discovery schema no longer declares `$id`
+
+**No action required for a deployment.** `catalog-discovery.schema.json` used to declare
+`"$id": "https://local-mcp-gateway.dev/schemas/catalog-discovery-v1.json"`, a URL the schema was
+never published at. A catalog producer that references the schema by that URI must reference the
+file itself instead; the schema's content is unchanged.
 
 ## 1.3.0 — REST API tools carry their full description
 
@@ -118,7 +197,8 @@ carries — read it as "nothing changes without being written down here", not as
 always safe to take unread". **1.2.0 and 1.5.0 above are minors that need an action**: 1.2.0
 defaults `WORKSPACE_MODE` to `single`, and a deployment that never set the mode refuses to start
 until it sets one; 1.5.0 renames every stored tool prefix that contains `_`, and with it every tool
-that server exposes. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
+that server exposes, and changes the name the gateway reports to telemetry, upstream servers,
+PostgreSQL, OAuth providers and its own MCP clients. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
 
 That is what makes the moving tags safe to pin:
 
