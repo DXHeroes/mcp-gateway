@@ -64,6 +64,9 @@ cannot write by accident, and you can share one without handing over the credent
 Only the owner can share a profile. Share it so a colleague can use it without rebuilding it, or
 give them Admin level so they can maintain it too.
 
+The owner and everyone it is shared with are told when someone else changes the profile or a
+server in it. The change shows in a **Changed by others** card on the profile.
+
 ## Delete a profile
 
 Open the profile and delete it. The address stops working immediately and any AI client pointed at
