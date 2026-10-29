@@ -182,8 +182,10 @@ config:
     audiences: "" # comma-separated resource identifiers, e.g. urn:corp:mcp-gateway:prod
     clockToleranceSeconds: "" # default: 60
     tokenHeader: "" # extra header to read the token from (API gateway in front)
-    orgSlug: "" # org for the non-org-scoped /api/mcp/gateway route
-    subjectClaim: "" # default: sub
+    # org for the non-org-scoped /api/mcp/gateway route and for administering external identities
+    orgSlug: ""
+    # claim(s) identifying a calling service (app:<value>) and its client id;
+    # not a shared, per-token or person claim
     clientIdClaim: "" # default: azp,appid,client_id
     scopesClaim: "" # default: scp,scope
     rolesClaim: "" # default: roles,groups

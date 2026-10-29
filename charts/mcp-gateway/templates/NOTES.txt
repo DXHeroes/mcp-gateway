@@ -58,3 +58,12 @@
        networkPolicy.ingressNamespaceSelector.matchLabels."kubernetes.io/metadata.name"=openshift-ingress
 {{- end }}
 {{- end }}
+{{- with .Values.config.externalJwt }}
+{{- if .subjectClaim }}
+
+6. WARNING: config.externalJwt.subjectClaim was removed and is ignored; the chart no
+   longer passes it to the gateway. A person is identified by sub, a service token
+   without sub by config.externalJwt.clientIdClaim (default azp,appid,client_id).
+   Remove subjectClaim from your values.
+{{- end }}
+{{- end }}

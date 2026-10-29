@@ -118,9 +118,6 @@ data:
   {{- with .orgSlug }}
   MCP_EXTERNAL_JWT_ORG_SLUG: {{ . | quote }}
   {{- end }}
-  {{- with .subjectClaim }}
-  MCP_EXTERNAL_JWT_SUBJECT_CLAIM: {{ . | quote }}
-  {{- end }}
   {{- with .clientIdClaim }}
   MCP_EXTERNAL_JWT_CLIENT_ID_CLAIM: {{ . | quote }}
   {{- end }}
