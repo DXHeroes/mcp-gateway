@@ -137,7 +137,10 @@
             "clockToleranceSeconds": { "type": "string" },
             "tokenHeader": { "type": "string" },
             "orgSlug": { "type": "string" },
-            "subjectClaim": { "type": "string" },
+            "subjectClaim": {
+              "type": "string",
+              "description": "Removed and ignored: the chart no longer passes it to the gateway, and helm install/upgrade prints a warning in the release notes when it is set. Accepted only so an existing values file that sets it still validates."
+            },
             "clientIdClaim": { "type": "string" },
             "scopesClaim": { "type": "string" },
             "rolesClaim": { "type": "string" },
