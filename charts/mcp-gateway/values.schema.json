@@ -154,6 +154,10 @@
             "roleHttpActivePath": { "type": "string" },
             "roleHttpRolesPath": { "type": "string" },
             "roleHttpTimeoutMs": { "type": "string" },
+            "roleRfc7662ClientAuth": {
+              "type": "string",
+              "enum": ["", "basic", "basic-urlencoded", "post"]
+            },
             "rolesCacheTtlSeconds": { "type": "string" }
           },
           "additionalProperties": false

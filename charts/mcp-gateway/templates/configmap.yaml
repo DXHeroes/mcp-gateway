@@ -148,6 +148,9 @@ data:
   {{- with .roleHttpTimeoutMs }}
   MCP_EXTERNAL_JWT_ROLE_HTTP_TIMEOUT_MS: {{ . | quote }}
   {{- end }}
+  {{- with .roleRfc7662ClientAuth }}
+  MCP_EXTERNAL_JWT_ROLE_RFC7662_CLIENT_AUTH: {{ . | quote }}
+  {{- end }}
   {{- with .rolesCacheTtlSeconds }}
   MCP_EXTERNAL_JWT_ROLES_CACHE_TTL_SECONDS: {{ . | quote }}
   {{- end }}

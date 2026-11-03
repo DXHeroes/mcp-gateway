@@ -196,6 +196,9 @@ config:
     roleHttpActivePath: "" # JSON path to the active flag (http-json; deny when false)
     roleHttpRolesPath: "" # JSON path to the roles array; default: roles
     roleHttpTimeoutMs: "" # default: 5000
+    # how rfc7662 sends its client id and secret: basic (raw Basic header) |
+    # basic-urlencoded (URL-encoded first, RFC 6749) | post (request body); default: basic
+    roleRfc7662ClientAuth: ""
     rolesCacheTtlSeconds: "" # default: 300
 
 # -- Secrets. Production: reference an existing Secret (Vault / External Secrets
