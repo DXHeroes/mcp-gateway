@@ -1,5 +1,5 @@
 DXH Gateway EE Distribution Terms
-Version 2026-09-17.1
+Version 2026-11-02.1
 Copyright 2026 DX Heroes. All rights reserved.
 
 Running the official DXH Gateway Enterprise Edition container image requires
@@ -9,11 +9,19 @@ period and active-user limit. A null user limit means unlimited users. Trial
 licenses are issued individually; their signed expiry defines trial duration.
 Paid and trial licenses enable the same EE product features.
 
-All active local accounts and verified external identities consume seats across
-the installation. External identities are distinct by verified issuer and
-subject; identities are not merged by email. All roles count. Sessions and
-user-owned keys do not consume additional seats. Deactivation frees a seat
-and denies that identity access.
+Seats are for people, not for applications. Every active local account
+and every active verified external identity of a person consumes one seat
+across the installation. External identities are distinct by verified issuer
+and subject; identities are not merged by email. All roles count. Sessions and
+user-owned keys do not consume additional seats.
+
+Applications and services that call the gateway on their own behalf do not
+consume seats. An external identity is treated as an application when its
+verified token carries no subject and no claim that identifies a person, and
+names the calling client in the configured client id claim. A token that
+carries a subject cannot be told apart from a person, so its identity consumes
+a seat even when it belongs to an application. Deactivating an identity denies
+it access and frees its seat, if it consumes one.
 
 Both paid and trial licenses retain full functionality for 30 days after expiry.
 After that period, existing operation, login, credential renewal, exports and
