@@ -9,6 +9,64 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
+## 1.8.0 — `{ fromEnv }` reads only listed variables; config plan, apply and `manage` keys need an owner or an admin
+
+**Action required for every Enterprise Edition deployment that applies declarative configuration
+documents** (`POST /api/config/plan` and `/apply`) **or whose members use management API keys.**
+Community Edition has neither feature and needs no action.
+
+This release fixes a security issue in Enterprise Edition. Upgrade every Enterprise Edition
+deployment as soon as possible.
+
+### `{ fromEnv }` reads only the names in `CONFIG_FROM_ENV_ALLOWLIST`
+
+**If you do nothing,** every plan or apply of a document with `{ fromEnv }` fails with 400 and writes
+nothing. Connections already stored keep working; only the next plan or apply is refused:
+
+```
+Server "crm" apiKey: "CRM_API_KEY" is not in CONFIG_FROM_ENV_ALLOWLIST; ask the gateway operator to add it.
+```
+
+List the names your documents read (`grep -rn fromEnv` over them), comma-separated, in the gateway's
+environment: Helm `extraEnv`, or the `.env` of a compose installation.
+
+```bash
+CONFIG_FROM_ENV_ALLOWLIST=CRM_API_KEY,ISSUE_TRACKER_TOKEN
+```
+
+A variable of the gateway itself can never be listed: any `GATEWAY_*`, `AUTH_*`, `BETTER_AUTH_*`,
+`OTEL_*`, `ADFS_*`, `MCP_*` or `PG*` name and every other name in
+[environment variables](./environment-variables.md). On the list it refuses the boot and names the
+entry to remove:
+
+```
+CONFIG_FROM_ENV_ALLOWLIST lists DATABASE_URL, a variable of the gateway itself; remove it.
+```
+
+A document that read such a variable needs the secret in the connection instead: `{ value }` injected
+by the pipeline, or the secret entered once in the connection form and `{ configured: true }` in the
+document.
+
+**With `WORKSPACE_MODE=multi` `{ fromEnv }` is off**, because one environment serves every
+workspace: a non-empty list refuses the boot, and a document with `{ fromEnv }` gets 400. Replace each
+one with `{ value }` or `{ configured: true }`
+([workspace modes](./workspace-modes.md#declarative-config-reads-no-environment-variables)).
+
+### Plan, apply and `manage` keys need the owner or the admin role
+
+**If you do nothing,** a pipeline whose management key a member created gets 403 from plan and
+apply, and so does a member's session and a key whose creator has since been demoted from admin:
+
+```
+Only an owner or an admin can plan or apply a configuration document; ask one of them.
+```
+
+Have an owner or an admin create a new key for the pipeline and swap it in, or make the key's creator
+an admin. A member can no longer create a `manage` key (403): the **Generate management key** dialog
+offers a member Read-only only, and an API client that creates keys for a member must send
+`"scope": "read"`, because an omitted scope means `manage`. Existing `manage` keys of members keep
+working on every route except plan and apply.
+
 ## 1.5.0 — `toolPrefix` no longer accepts the underscore; the gateway reports itself as `mcp-gateway`
 
 Two changes need action. The tool prefix applies to every deployment whose declarative config or
@@ -194,11 +252,12 @@ no image name. 1.0.0 is the same product as 0.7.x with a promise attached.
 From this release on, every release that needs an operator action has its own section in this
 file, and no release changes a deployment silently. That is the promise the version number
 carries — read it as "nothing changes without being written down here", not as "a minor is
-always safe to take unread". **1.2.0 and 1.5.0 above are minors that need an action**: 1.2.0
+always safe to take unread". **1.2.0, 1.5.0 and 1.8.0 above are minors that need an action**: 1.2.0
 defaults `WORKSPACE_MODE` to `single`, and a deployment that never set the mode refuses to start
 until it sets one; 1.5.0 renames every stored tool prefix that contains `_`, and with it every tool
 that server exposes, and changes the name the gateway reports to telemetry, upstream servers,
-PostgreSQL, OAuth providers and its own MCP clients. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
+PostgreSQL, OAuth providers and its own MCP clients; 1.8.0 refuses a `{ fromEnv }` name the operator
+has not listed and lets only owners and admins plan, apply or create `manage` keys. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
 
 That is what makes the moving tags safe to pin:
 
