@@ -6,7 +6,7 @@ client cover all eight.
 
 > **Google calls this a Developer Preview.** Your project has to be enrolled in the
 > [Workspace Developer Preview Program](https://developers.google.com/workspace/preview) before
-> any tool works. Any Workspace account qualifies, including Education.
+> any tool works. Apply with a Workspace account; Education accounts can apply too.
 
 **You need:** a Google Workspace account for Developer Preview enrolment, admin access to a
 Google Cloud project, and the owner or admin role in the gateway.
@@ -15,37 +15,47 @@ Personal `@gmail.com` access through a third-party OAuth client is **not yet ver
 for these gateway presets. External audience or successful consent alone does not establish
 MCP service admission or tool coverage.
 
+Developer Preview is for testing. Under the [program terms](https://developers.google.com/workspace/preview#developer_preview_program_terms),
+do not grant access to users outside your domain or company before general availability unless
+Google has granted the applicable permission for that feature. An External OAuth audience does
+not remove this program restriction.
+
 ---
 
 ## 1. Enrol the project
 
 In the [Workspace Developer Preview Program](https://developers.google.com/workspace/preview):
 
-1. Accept the terms and submit the form with your Workspace account and Cloud project.
-2. Accept the Google Group invitation they email you. If your address rejects group mail, the
-   request stalls with no warning.
-3. Wait for the confirmation email. Google says it takes a couple of days.
+1. Review and accept the terms, then submit the form with your individual Workspace email
+   and **Google Cloud project number**, not just its project ID. Gmail addresses, service
+   accounts and Google Groups cannot be the applicant.
+2. Allow your account to be added to the program's Google Group and watch for verification
+   messages. Google must verify the account and register the project.
+3. Wait for the confirmation email. Google says it takes a couple of days. Enabling APIs
+   alone does not enroll the project.
 
 Enrolment covers the whole project, not one product at a time.
 
-## 2. Turn on the APIs
+## 2. Turn on the APIs and MCP services
 
-In **APIs & Services** → **Enable APIs and services**, enable the APIs for your presets,
-as listed in the current
-[Google setup guide](https://developers.google.com/workspace/guides/configure-mcp-servers).
+In **APIs & Services** → **Enable APIs and services**, enable both the standard APIs and
+MCP services for your presets in the same Google Cloud project. The
+[Google setup guide](https://developers.google.com/workspace/guides/configure-mcp-servers)
+requires both steps; enabling a standard API alone does not enable its separate MCP service.
 
-| Preset | Enable |
-| --- | --- |
-| Gmail | Gmail API |
-| Google Drive | Drive API |
-| Google Calendar | Calendar API |
-| Google Docs | Docs API + Drive API |
-| Google Sheets | Sheets API + Drive API |
-| Google Slides | Slides API + Drive API |
-| Google Chat | Chat API |
-| Google People | People API only |
+| Preset | Standard API service ID | MCP service ID |
+| --- | --- | --- |
+| Gmail | `gmail.googleapis.com` | `gmailmcp.googleapis.com` |
+| Google Drive | `drive.googleapis.com` | `drivemcp.googleapis.com` |
+| Google Calendar | `calendar-json.googleapis.com` | `calendarmcp.googleapis.com` |
+| Google Docs | `docs.googleapis.com` | `docsmcp.googleapis.com` |
+| Google Sheets | `sheets.googleapis.com` | `sheetsmcp.googleapis.com` |
+| Google Slides | `slides.googleapis.com` | `slidesmcp.googleapis.com` |
+| Google Chat | `chat.googleapis.com` | `chatmcp.googleapis.com` |
+| Google People | `people.googleapis.com` | `people.googleapis.com` (same service) |
 
-Docs, Sheets and Slides open their files through Drive, which is why they need it too.
+Docs, Sheets and Slides also need the standard Drive API (`drive.googleapis.com`) to access
+files. People uses the same service ID for both steps, so enable it once.
 
 ## 3. Set up the OAuth client
 
@@ -77,6 +87,25 @@ Docs, Sheets and Slides open their files through Drive, which is why they need i
 5. Store the **Client ID** and **Client secret** securely and enter them in the preset.
    Keep secrets out of source control and issue comments.
 
+### Scope classes for Gmail, Drive, Calendar and People
+
+The four presets above use these classes (checked on 7 November 2026). All scope names below
+have the prefix `https://www.googleapis.com/auth/`.
+
+| Class | Scopes |
+| --- | --- |
+| Non-sensitive | `drive.file`, `calendar.calendarlist.readonly`, `calendar.events.freebusy`, `userinfo.profile` |
+| Sensitive | `calendar.events.readonly`, `contacts.readonly`, `directory.readonly` |
+| Restricted | `gmail.modify`, `gmail.compose`, `drive.readonly` |
+
+Check the labels in **Google Auth Platform → Data Access** for your own project and for any
+other scopes you add. Google's [scope reference](https://developers.google.com/identity/protocols/oauth2/scopes)
+identifies that page as the source of sensitive-scope indicators. The [Gmail](https://developers.google.com/workspace/gmail/api/auth/scopes)
+and [Drive](https://developers.google.com/workspace/drive/api/guides/api-specific-auth) guides
+list their restricted scopes. Complete the applicable verification before public use; Google
+also requires a security assessment when restricted-scope data is stored or transmitted on
+servers. The scope class is separate from Developer Preview eligibility.
+
 Google will reject unmarked Workspace MCP clients from **11 November 2026**. Existing clients
 not marked by **12 November 2026** require replacement with a new agentic client. If the setting
 cannot be changed, create a replacement and reconnect affected accounts.
@@ -85,11 +114,16 @@ cannot be changed, create a replacement and reconnect affected accounts.
 ## 4. Install a preset
 
 1. **Servers** → **Catalog** → **Community presets** → pick the server → **Add to my servers**.
-2. Paste the same client ID and secret into every preset you install. Each one keeps its own copy.
+2. Paste the same client ID and secret into every community preset you install. These
+   installations each store their own client configuration.
 3. Choose the credential mode. **Per-user** means each person reaches their own mail, calendar or
    files. See [Service credentials](./per-user-connections.md).
 4. **Create server**, then **Authorize**. In per-user mode each person authorizes themselves under
    **My connections** instead.
+
+A workspace owner or admin can instead prepare a **managed preset** that holds the OAuth
+client configuration centrally. Members still authorize their own accounts; their connections
+read the client configuration from the managed preset.
 
 ---
 
@@ -98,7 +132,7 @@ cannot be changed, create a replacement and reconnect affected accounts.
 | Problem | What it means |
 | --- | --- |
 | Tools appear, but every call says the project is not enrolled | Step 1 is still pending. Everything else is fine, so don't go re-checking your OAuth setup. |
-| The connection returns nothing | Check project enrolment, enabled APIs, consent and the provider error in traces. An empty result alone does not identify the cause. |
+| The connection returns nothing | Check project enrolment, enabled APIs and MCP services, consent and the provider error in traces. An empty result alone does not identify the cause. |
 | `redirect_uri_mismatch` | The redirect URI in Google Cloud does not exactly match `https://<gateway>/api/oauth/callback`. |
 | Workspace MCP rejects the OAuth client | Check the AI-agent setting in **Google Auth Platform → Clients**; replace the client if it cannot be marked. |
 | `access_denied` on the Google approval screen | That scope is not listed on your consent screen. |
