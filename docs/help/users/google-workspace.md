@@ -1,15 +1,19 @@
 # Google Workspace
 
 Eight presets (Gmail, Drive, Calendar, Docs, Sheets, Slides, Chat and People) connect the gateway
-to Google's official Workspace MCP servers. One Google Cloud project and one OAuth client cover
-all eight.
+to Google's official Workspace MCP servers. One Google Cloud project and one dedicated MCP OAuth
+client cover all eight.
 
 > **Google calls this a Developer Preview.** Your project has to be enrolled in the
 > [Workspace Developer Preview Program](https://developers.google.com/workspace/preview) before
 > any tool works. Any Workspace account qualifies, including Education.
 
-**You need:** a Google Workspace account (not a personal `@gmail.com` one), admin access to a
+**You need:** a Google Workspace account for Developer Preview enrolment, admin access to a
 Google Cloud project, and the owner or admin role in the gateway.
+
+Personal `@gmail.com` access through a third-party OAuth client is **not yet verified**
+for these gateway presets. External audience or successful consent alone does not establish
+MCP service admission or tool coverage.
 
 ---
 
@@ -26,28 +30,28 @@ Enrolment covers the whole project, not one product at a time.
 
 ## 2. Turn on the APIs
 
-Go to **APIs & Services** → **Enable APIs and services**. Each product needs **two** APIs, the
-normal one and its MCP counterpart. Enabling only one is the most common reason a connection comes
-back empty.
+In **APIs & Services** → **Enable APIs and services**, enable the APIs for your presets,
+as listed in the current
+[Google setup guide](https://developers.google.com/workspace/guides/configure-mcp-servers).
 
 | Preset | Enable |
 | --- | --- |
-| Gmail | Gmail API + **Gmail MCP API** |
-| Google Drive | Drive API + **Drive MCP API** |
-| Google Calendar | Calendar API + **Calendar MCP API** |
-| Google Docs | Docs API + **Docs MCP API** + Drive API |
-| Google Sheets | Sheets API + **Sheets MCP API** + Drive API |
-| Google Slides | Slides API + **Slides MCP API** + Drive API |
-| Google Chat | Chat API + **Chat MCP API** |
+| Gmail | Gmail API |
+| Google Drive | Drive API |
+| Google Calendar | Calendar API |
+| Google Docs | Docs API + Drive API |
+| Google Sheets | Sheets API + Drive API |
+| Google Slides | Slides API + Drive API |
+| Google Chat | Chat API |
 | Google People | People API only |
 
-Docs, Sheets and Slides open their files through Drive, which is why they need it too. People is
-the one product with no separate MCP API.
+Docs, Sheets and Slides open their files through Drive, which is why they need it too.
 
 ## 3. Set up the OAuth client
 
-1. **OAuth consent screen** → user type **Internal**. Choosing **External** means Google has to
-   [verify your app](https://support.google.com/cloud/answer/13463073) first.
+1. **Google Auth Platform → Audience**: use **Internal** for your organization only.
+   For outside users, select **External**; in Testing, add authorized test users. Check
+   [verification requirements](https://support.google.com/cloud/answer/13463073) before public use.
 2. Add the scopes for the presets you plan to install. Scopes are the permissions Google grants.
    Every one below starts with `https://www.googleapis.com/auth/`.
 
@@ -67,7 +71,16 @@ the one product with no separate MCP API.
 3. **Credentials** → **Create credentials** → **OAuth client ID** → **Web application**. Under
    authorized redirect URIs add `https://<your-gateway-host>/api/oauth/callback`, exactly, with no
    trailing slash.
-4. Copy the **Client ID** and **Client secret**.
+4. Select **Use this client for an AI-powered agent** in **Google Auth Platform → Clients**.
+   Use a separate MCP client if the existing one also handles sign-in or direct API features
+   ([Google client isolation guidance](https://support.google.com/cloud/answer/15549257)).
+5. Store the **Client ID** and **Client secret** securely and enter them in the preset.
+   Keep secrets out of source control and issue comments.
+
+Google will reject unmarked Workspace MCP clients from **11 November 2026**. Existing clients
+not marked by **12 November 2026** require replacement with a new agentic client. If the setting
+cannot be changed, create a replacement and reconnect affected accounts.
+[Google announcement](https://developers.google.com/workspace/docs/release-notes#october_12_2026).
 
 ## 4. Install a preset
 
@@ -85,8 +98,9 @@ the one product with no separate MCP API.
 | Problem | What it means |
 | --- | --- |
 | Tools appear, but every call says the project is not enrolled | Step 1 is still pending. Everything else is fine, so don't go re-checking your OAuth setup. |
-| The connection returns nothing | Only one of the two APIs is on. See step 2. |
+| The connection returns nothing | Check project enrolment, enabled APIs, consent and the provider error in traces. An empty result alone does not identify the cause. |
 | `redirect_uri_mismatch` | The redirect URI in Google Cloud does not exactly match `https://<gateway>/api/oauth/callback`. |
+| Workspace MCP rejects the OAuth client | Check the AI-agent setting in **Google Auth Platform → Clients**; replace the client if it cannot be marked. |
 | `access_denied` on the Google approval screen | That scope is not listed on your consent screen. |
 | An error that goes away when you retry | Google occasionally rejects a request that is otherwise fine. |
 | It works for an hour, then stops | The refresh token is missing. The preset asks for one automatically, so put the authorize settings back if you changed them. |
