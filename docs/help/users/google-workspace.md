@@ -11,9 +11,10 @@ client cover all eight.
 **You need:** a Google Workspace account for Developer Preview enrolment, admin access to a
 Google Cloud project, and the owner or admin role in the gateway.
 
-Personal `@gmail.com` access through a third-party OAuth client is **not yet verified**
-for these gateway presets. External audience or successful consent alone does not establish
-MCP service admission or tool coverage.
+Personal `@gmail.com` and Workspace test accounts have passed tool listing and read calls for
+**Calendar and People** through managed presets. Gmail and Drive remain unverified in this test.
+See [verified service coverage](#verified-service-coverage). External audience or successful
+consent alone does not establish MCP service admission or tool coverage.
 
 Developer Preview is for testing. Under the [program terms](https://developers.google.com/workspace/preview#developer_preview_program_terms),
 do not grant access to users outside your domain or company before general availability unless
@@ -126,6 +127,34 @@ client configuration centrally. Members still authorize their own accounts; thei
 read the client configuration from the managed preset.
 
 ---
+
+## Verified service coverage
+
+Tests on **8 November 2026** used a dedicated agentic client in an enrolled project, managed
+presets on the released gateway, and actual MCP calls with each account's own credential:
+
+| Service | Personal Gmail | Workspace | Observed tool coverage |
+| --- | --- | --- | --- |
+| Calendar | Tool listing and reads passed | Tool listing and reads passed | 9 tools; calendar/event listing and availability queries succeeded |
+| People | Profile and contact search passed | Profile read and empty contact search passed | 3 read-only tools: profile, contact search and directory search |
+| Gmail | Not tested | Not tested | No service verdict from this test |
+| Drive | Not tested | Not tested | No service verdict from this test |
+
+The personal contact search returned a contact; the empty Workspace search did not. Directory
+access was not granted to the personal account or tested there. A personal profile response can
+omit its email address; that alone is not a failed connection or proof of account isolation.
+
+Calendar's listed tools include event creation, updates and deletion. The default preset's
+scopes cover reads. To use event writes, add `https://www.googleapis.com/auth/calendar.events`
+to the consent configuration and the managed preset, then authorize the account again
+([Google's write-scope reference](https://developers.google.com/workspace/calendar/api/v3/reference/mcp/tools_list/create_event#authorization_scopes)).
+Listing a write tool does not prove that the token can execute it. Gateway tool approval is a
+separate gate: an expired request for human approval did not execute a provider write in this
+test. Event writes and their readback remain unverified.
+
+These observations do not establish public app availability, every tenant's consent policy,
+complete account isolation or token revocation/reconnect behavior. Developer Preview terms
+and OAuth verification requirements still apply.
 
 ## Troubleshooting
 
