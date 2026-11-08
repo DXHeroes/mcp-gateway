@@ -12,7 +12,8 @@ client cover all eight.
 Google Cloud project, and the owner or admin role in the gateway.
 
 Personal `@gmail.com` and Workspace test accounts have passed tool listing and read calls for
-**Calendar and People** through managed presets. Gmail and Drive remain unverified in this test.
+**Gmail, Drive, Calendar and People** through managed presets. Bounded synthetic writes also
+passed for Gmail drafts, Drive text files and Calendar events on both account kinds.
 See [verified service coverage](#verified-service-coverage). External audience or successful
 consent alone does not establish MCP service admission or tool coverage.
 
@@ -78,7 +79,9 @@ files. People uses the same service ID for both steps, so enable it once.
    | Google People | `directory.readonly`, `userinfo.profile`, `contacts.readonly` |
 
    Gmail asks for `gmail.modify` rather than read-only because read-only cannot label, archive or
-   trash a message.
+   trash a message. The narrower `gmail.readonly` plus `gmail.compose` grants were sufficient for
+   the read/draft tests below; they do not authorize all advertised mailbox mutations.
+   Calendar event writes additionally need `calendar.events`.
 3. **Credentials** → **Create credentials** → **OAuth client ID** → **Web application**. Under
    authorized redirect URIs add `https://<your-gateway-host>/api/oauth/callback`, exactly, with no
    trailing slash.
@@ -90,14 +93,15 @@ files. People uses the same service ID for both steps, so enable it once.
 
 ### Scope classes for Gmail, Drive, Calendar and People
 
-The four presets above use these classes (checked on 7 November 2026). All scope names below
-have the prefix `https://www.googleapis.com/auth/`.
+The four presets and the tested narrower Gmail and Calendar write grants use these classes
+(checked on 7–8 November 2026). All scope names below have the prefix
+`https://www.googleapis.com/auth/`.
 
 | Class | Scopes |
 | --- | --- |
 | Non-sensitive | `drive.file`, `calendar.calendarlist.readonly`, `calendar.events.freebusy`, `userinfo.profile` |
-| Sensitive | `calendar.events.readonly`, `contacts.readonly`, `directory.readonly` |
-| Restricted | `gmail.modify`, `gmail.compose`, `drive.readonly` |
+| Sensitive | `calendar.events.readonly`, `calendar.events`, `contacts.readonly`, `directory.readonly` |
+| Restricted | `gmail.readonly`, `gmail.modify`, `gmail.compose`, `drive.readonly` |
 
 Check the labels in **Google Auth Platform → Data Access** for your own project and for any
 other scopes you add. Google's [scope reference](https://developers.google.com/identity/protocols/oauth2/scopes)
@@ -135,10 +139,10 @@ presets on the released gateway, and actual MCP calls with each account's own cr
 
 | Service | Personal Gmail | Workspace | Observed tool coverage |
 | --- | --- | --- | --- |
-| Calendar | Tool listing and reads passed | Tool listing and reads passed | 9 tools; calendar/event listing and availability queries succeeded |
+| Calendar | Reads and bounded event writes passed | Reads and bounded event writes passed | 9 tools; calendar/event listing, availability, create, get, update and delete succeeded |
 | People | Profile and contact search passed | Profile read and empty contact search passed | 3 read-only tools: profile, contact search and directory search |
-| Gmail | Not tested | Not tested | No service verdict from this test |
-| Drive | Not tested | Not tested | No service verdict from this test |
+| Gmail | Reads and recipient-free draft creation passed | Reads and recipient-free draft creation passed | 23 tools; search, reads and draft creation; no send or draft update/delete tool advertised |
+| Drive | Reads and private text-file creation passed | Reads and private text-file creation passed | 8 tools; listing, metadata, permissions, content and creation; no update/delete tool advertised |
 
 The personal contact search returned a contact; the empty Workspace search did not. Directory
 access was not granted to the personal account or tested there. A personal profile response can
@@ -149,8 +153,23 @@ scopes cover reads. To use event writes, add `https://www.googleapis.com/auth/ca
 to the consent configuration and the managed preset, then authorize the account again
 ([Google's write-scope reference](https://developers.google.com/workspace/calendar/api/v3/reference/mcp/tools_list/create_event#authorization_scopes)).
 Listing a write tool does not prove that the token can execute it. Gateway tool approval is a
-separate gate: an expired request for human approval did not execute a provider write in this
-test. Event writes and their readback remain unverified.
+separate gate. In the later, explicitly approved write test, each account created one private
+one-minute event with no guests, reminders or notifications and free availability, read it,
+updated only its title, read it again, and deleted it. Subsequent reads confirmed both events
+were absent. Earlier expired approval requests had not executed a provider write.
+
+Each Gmail account created and read one synthetic draft with no recipients; no mail was sent.
+Each exact draft was then discarded in Gmail's UI and subsequent MCP reads reported it not
+found. Each Drive account created and read one synthetic text file; metadata and permissions
+confirmed private visibility and owner-only access. Both files were moved to the bin in Drive's
+UI, and subsequent MCP metadata reads confirmed `trashed: true`. The bin was not emptied.
+This browser cleanup does not establish MCP delete coverage. PDF uploads, native document
+conversion and Docs/Sheets export variants were not tested in this run.
+
+After an expired Workspace Calendar token, discovery required renewed OAuth consent; reconnect
+restored the tools and the event workflow passed. These tests do not establish unattended
+refresh behavior. The Gmail and Drive grants used here remain restricted even when the test
+accounts successfully connect.
 
 These observations do not establish public app availability, every tenant's consent policy,
 complete account isolation or token revocation/reconnect behavior. Developer Preview terms
@@ -166,7 +185,7 @@ and OAuth verification requirements still apply.
 | Workspace MCP rejects the OAuth client | Check the AI-agent setting in **Google Auth Platform → Clients**; replace the client if it cannot be marked. |
 | `access_denied` on the Google approval screen | That scope is not listed on your consent screen. |
 | An error that goes away when you retry | Google occasionally rejects a request that is otherwise fine. |
-| It works for an hour, then stops | The refresh token is missing. The preset asks for one automatically, so put the authorize settings back if you changed them. |
+| It works for an hour, then stops | Check whether a refresh token was issued and whether renewal failed. The preset sends `access_type=offline` and `prompt=consent`; restore those parameters if edited. Renew consent when the connection requires it. |
 
 > **No Google Cloud project?** The community-run
 > [`google_workspace_mcp`](https://github.com/taylorwilsdon/google_workspace_mcp) server registers

@@ -1,15 +1,38 @@
 # GitHub
 
-The **GitHub MCP** preset connects the gateway to GitHub's own MCP server, so an AI can work with
+The **GitHub MCP** (PAT) and **GitHub MCP (OAuth)** presets connect to GitHub's own MCP server,
+so an AI can work with
 your repositories, issues, pull requests, Actions runs and projects.
 
-This preset is the odd one out: it signs in with a **personal access token** you create on GitHub,
-not by clicking through a login screen.
+Choose **GitHub MCP (OAuth)** for browser sign-in with your own account. The existing
+**GitHub MCP** preset continues to accept a personal access token, as described below.
 
 **You need:** the owner or admin role in the gateway, and a GitHub account that can see the
 repositories. GitHub Enterprise Server is not supported. Enterprise Cloud works, but on a
 different address (`https://copilot-api.SUBDOMAIN.ghe.com/mcp`), which you set on the connection
 after you add the preset.
+
+## OAuth setup
+
+An administrator creates a dedicated GitHub **OAuth App** under **Settings → Developer settings**.
+Set its authorization callback to `https://<gateway-host>/api/oauth/callback`. Use its client ID
+and client secret on the gateway; the preset has no client credentials built in and GitHub does
+not support DCR for this service. The fixed endpoints are `https://github.com/login/oauth/authorize`
+and `https://github.com/login/oauth/access_token`.
+
+Choose **GitHub MCP (OAuth)** in the Catalog, keep **Per-user**, configure the registered client,
+save and authorize your account. Organization approval and SSO restrictions can still prevent access.
+
+The default OAuth App scopes are `repo`, `read:org` and `project` for repository, organization
+membership and project access, including writes. Narrow them for the integration where possible;
+gateway write policy still applies. The preset does not request workflow-file editing or account
+administration. A GitHub App is an alternative with fine-grained permissions: it uses the same
+user OAuth endpoints, but its installation permissions replace requested OAuth App scopes.
+Configure matching app permissions and clear the OAuth scope list when configuring that client.
+
+No existing PAT connection is changed automatically. Confirm the replacement account and its
+required tools before moving an existing integration. See [provider host guidance](https://github.com/github/github-mcp-server/blob/main/docs/host-integration.md)
+and [OAuth App scopes](https://docs.github.com/en/apps/oauth-apps/building-oauth-apps/scopes-for-oauth-apps).
 
 ## 1. Create a token
 

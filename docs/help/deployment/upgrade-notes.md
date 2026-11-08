@@ -18,6 +18,22 @@ Community Edition has neither feature and needs no action.
 This release fixes a security issue in Enterprise Edition. Upgrade every Enterprise Edition
 deployment as soon as possible.
 
+### Synchronous integrator MCP calls use a 20-second execution budget
+
+Enterprise Edition product calls made with a service key now share one 20-second gateway
+execution budget across profile lookup, credential renewal, the provider operation and its one
+permitted replay. Previously an upstream call could use its longer remote-server timeout.
+Ordinary member MCP clients and the connector's `bounded_60m` policy retain their existing limits.
+Community Edition has no integrator service-key calls and needs no action.
+
+**If you do nothing,** a synchronous product call that exceeds this budget receives a JSON-RPC
+`-32603` timeout rather than continuing to wait. It is not a credential failure and should not
+prompt a reconnect. Check products that rely on long-running synchronous tools, and add a
+20-second cancellation signal around the complete client operation, including connection setup
+and network time. A timeout cannot prove whether a write took effect; check provider state before
+retrying a write. A refresh grant already sent before cancellation may finish storing a rotated
+token, but the cancelled call starts no subsequent tool or grant.
+
 ### `{ fromEnv }` reads only the names in `CONFIG_FROM_ENV_ALLOWLIST`
 
 **If you do nothing,** every plan or apply of a document with `{ fromEnv }` fails with 400 and writes
