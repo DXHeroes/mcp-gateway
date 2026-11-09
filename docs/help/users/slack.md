@@ -23,18 +23,21 @@ Everyone connects their own Slack account, and the AI sees exactly what they see
 **You need:** the owner or admin role in the gateway, and someone who can create a Slack app and
 get it approved for your workspace.
 
+Slack's official MCP server accepts internal apps for their own workspace and apps published
+in the Slack Marketplace. It does not accept unlisted external apps.
+
 ### 1. Create the Slack app
 
 Go to [api.slack.com/apps](https://api.slack.com/apps)
 ([Slack's own guide](https://docs.slack.dev/quickstart)):
 
 1. **Create New App** → **From scratch**. Give it a name and pick your workspace.
-2. Open **Agents & AI Apps** and turn on **Model Context Protocol**.
+2. Turn on **Model Context Protocol**. Under **App Manifest**, set
+   `settings.is_mcp_enabled: true` and save.
 3. Open **OAuth & Permissions**, turn on **PKCE**, and under **Redirect URLs** add
    `https://<your-gateway-host>/api/oauth/callback`. Copy it exactly, with no trailing slash.
-4. On the same page, add any one scope under **Bot Token Scopes**. Slack only shows the approval
-   screen for apps that have a bot, so without this the login page comes up empty. Nothing else
-   uses it.
+4. The preset uses Slack's user-only OAuth endpoints, `/oauth/v2_user/authorize` and
+   `/api/oauth.v2.user.access`. This flow does not require a bot scope or bot token.
 
 ### 2. Add the user token scopes
 
@@ -136,7 +139,7 @@ Header: Authorization: Bearer mcp_api_…
 | --- | --- | --- |
 | A | `bad_redirect_uri` | The redirect URL in Slack does not exactly match `https://<gateway>/api/oauth/callback`. |
 | A | `invalid_scope` | One of the user token scopes is missing. |
-| A | The Slack approval page is blank | The app has no bot scope. See step 1. |
+| A | No tools after connecting | Check `settings.is_mcp_enabled` and the user scopes required by each tool in Slack's MCP guide. |
 | A | Slack says it is waiting for approval | Normal if your workspace restricts apps. An admin approves it once. |
 | A | A bot token is rejected by the preset | Expected. The preset only takes personal accounts; use route B. |
 | B | `not_authed` or `invalid_auth` | The header is missing or malformed. It has to be `Authorization: Bearer xoxb-…`. |
