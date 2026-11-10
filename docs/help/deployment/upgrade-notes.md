@@ -9,7 +9,7 @@ you are moving to. The gateway shows its own version on the last line of the sid
 build and migration details behind it, and reports it on the authenticated
 `GET /api/edition` and `GET /api/diagnostics` endpoints.
 
-## 1.8.0 — `{ fromEnv }` reads only listed variables; config plan, apply and `manage` keys need an owner or an admin
+## 1.8.0 — `{ fromEnv }` reads only listed variables; config plan, apply and `manage` keys need an owner or an admin; the gateway endpoint serves each person their own default profile
 
 **Action required for every Enterprise Edition deployment that applies declarative configuration
 documents** (`POST /api/config/plan` and `/apply`) **or whose members use management API keys.**
@@ -17,6 +17,10 @@ Community Edition has neither feature and needs no action.
 
 This release fixes a security issue in Enterprise Edition. Upgrade every Enterprise Edition
 deployment as soon as possible.
+
+**Action required for every deployment whose members use the gateway endpoint**
+(`/api/mcp/gateway` or `/api/mcp/<workspace-slug>/gateway`), in both editions: see
+[The gateway endpoint serves each person their own default profile](#the-gateway-endpoint-serves-each-person-their-own-default-profile).
 
 ### Synchronous integrator MCP calls use a 20-second execution budget
 
@@ -82,6 +86,60 @@ an admin. A member can no longer create a `manage` key (403): the **Generate man
 offers a member Read-only only, and an API client that creates keys for a member must send
 `"scope": "read"`, because an omitted scope means `manage`. Existing `manage` keys of members keep
 working on every route except plan and apply.
+
+### The gateway endpoint serves each person their own default profile
+
+The default gateway profile used to be one setting for the whole instance: whoever nominated a
+profile changed what the gateway endpoint served everyone, and the nominated profile was shared
+with the whole workspace. Now the gateway endpoint is one address that serves **each person their
+own default profile**. Everyone chooses theirs under **Profiles → Gateway endpoint**, any role
+included; the choice shares nothing and changes nothing for anyone else. Until a person chooses,
+the endpoint serves their profile named `default`, else their oldest profile, and creates an empty
+`default` for someone who has no profile at all (not while an expired Enterprise license blocks
+configuration changes; such a person is refused until they own a profile). The old setting is no
+longer read.
+
+**If you do nothing,** no one has chosen a default yet, so the gateway endpoint serves every person
+their own `default` profile, else their oldest. That includes whoever nominated the old default:
+if they nominated a profile with another name, their own clients switch too. A member who relied on
+a profile someone else nominated gets their own `default` profile instead, which is often empty, so
+their client lists no tools. Have each person choose their own default, or share the team's
+profile with the workspace and point the clients at that profile's own address
+(`/api/mcp/<workspace-slug>/<profile-name>`).
+
+**People in several workspaces use the workspace address.** `/api/mcp/gateway` names no
+workspace, so it now serves only someone who belongs to exactly one; anyone in several gets an
+error that points to `/api/mcp/<workspace-slug>/gateway`, the address the Dashboard shows. A
+single-workspace deployment (`WORKSPACE_MODE=single`, the default) is not affected. In a
+multi-workspace deployment, move every client of such a person to the workspace address.
+
+**The gateway endpoint serves only the caller's own profile.** A profile shared with the caller is
+never served there, only at its own address.
+
+**Workspace shares made by earlier nominations stay.** Earlier releases shared the nominated
+profile with the whole workspace when it was nominated, and once on the upgrade that introduced the
+share. This release shares nothing, on upgrade either. Existing shares are not removed: the profile
+stays reachable at its own address for every member. Its owner reviews them in the profile's
+**Share** dialog and removes any that were not meant.
+
+**External identity-provider tokens (Enterprise Edition) are refused on the gateway endpoint**
+with a 404, because such a caller has no profile of its own. Move every such caller to the address
+of the profile it uses, `/api/mcp/<workspace-slug>/<profile-name>`, before you upgrade.
+`MCP_EXTERNAL_JWT_ORG_SLUG` no longer chooses a workspace for the gateway endpoint; it still names
+the workspace whose owners and admins administer external identities.
+
+**Profile API keys (Enterprise Edition) on the gateway endpoint** now work only when the key's
+profile is the one the endpoint serves its creator: their chosen default, else their profile named
+`default`, else their oldest. Any other key is refused there (HTTP 401 on the `/info` route, a JSON-RPC error on MCP requests), including a key on a profile
+someone else shared with its creator; before, a key on the nominated profile worked for everyone.
+Have the creator choose that profile as their default, or point the client at the profile's own
+address, `/api/mcp/<workspace-slug>/<profile-name>`, where the key keeps working.
+
+**API and declarative configuration.** `GET /api/settings/default-gateway-profile` needs an active
+workspace and answers the caller's own default (`profileName` is `null` when they own no profile
+there). `PUT` chooses the caller's own default. `GET /api/settings` no longer lists
+`default_gateway_profile`. In a configuration document, `settings.defaultGatewayProfile` sets the
+applying user's own default, and export writes it only when that user chose one.
 
 ## 1.5.0 — `toolPrefix` no longer accepts the underscore; the gateway reports itself as `mcp-gateway`
 
@@ -273,7 +331,8 @@ defaults `WORKSPACE_MODE` to `single`, and a deployment that never set the mode 
 until it sets one; 1.5.0 renames every stored tool prefix that contains `_`, and with it every tool
 that server exposes, and changes the name the gateway reports to telemetry, upstream servers,
 PostgreSQL, OAuth providers and its own MCP clients; 1.8.0 refuses a `{ fromEnv }` name the operator
-has not listed and lets only owners and admins plan, apply or create `manage` keys. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
+has not listed, lets only owners and admins plan, apply or create `manage` keys, and serves each
+person their own default profile on the gateway endpoint. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
 
 That is what makes the moving tags safe to pin:
 

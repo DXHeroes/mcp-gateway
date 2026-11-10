@@ -36,15 +36,23 @@ Paste it into the MCP client (Claude, Cursor and so on). The AI signs in as you 
 a client that cannot sign in interactively, such as a scheduled job, the profile can issue an API
 key instead. API keys are an [Enterprise feature](./editions.md).
 
-There is also one fixed address that always points at whichever profile is marked as default:
+There is also one fixed address, the same for everyone, that serves each person their own
+default profile:
 
 ```
 https://<your-gateway-host>/api/mcp/gateway
 ```
 
-Set the default under **Profiles** → **Gateway endpoint**. Marking a profile as default shares it
-with the whole workspace, and everyone calling this address uses that profile's stored
-credentials. Pick one you are happy to hand to every member.
+Choose your default under **Profiles** → **Gateway endpoint**. The choice is yours alone: it
+shares nothing and changes nothing for anyone else. Until you choose, the address serves your
+profile named `default`, else your oldest one. It only ever serves a profile you own, never one
+shared with you. An administrator can therefore allow this one address in every AI client, and
+each person who signs in gets their own profile behind it. To give the whole team one profile,
+share it with the workspace and use its own address.
+
+If you belong to several workspaces, use the workspace form
+`https://<your-gateway-host>/api/mcp/<workspace-slug>/gateway`, which the Dashboard shows. The
+short address names no workspace, so it refuses anyone in more than one.
 
 ## How to split them up
 
