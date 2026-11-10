@@ -1,18 +1,18 @@
 {
   "edition": "ce",
   "channel": "beta",
-  "version": "v1.8.0-beta.21",
+  "version": "v1.8.0-beta.22",
   "image": "ghcr.io/dxheroes/mcp-gateway-ce",
   "mirrors": [
     "docker.io/dxheroes/mcp-gateway-ce"
   ],
-  "digest": "sha256:4efba3f6fa3d91dcf800dc170bcd6d085ff61a0cafe66195d722c4bffd898d79",
+  "digest": "sha256:1f3a9663157f2eb2e91538a6711929eb6d9f3de1fd3ba88540adbfb0b5d28323",
   "seriesTags": [],
   "platforms": [
     "linux/amd64",
     "linux/arm64"
   ],
-  "sourceRevision": "d4a525cdf150d8765a2408ef1382b33f023ce14c",
+  "sourceRevision": "e3dc1a8905b42258517fd220f9995d4116a23be8",
   "signingIdentity": "https://github.com/DXHeroes/mcp-gateway-core/.github/workflows/edition-images.yml@refs/heads/main",
   "termsVersion": "2026-09-18.1"
 }
