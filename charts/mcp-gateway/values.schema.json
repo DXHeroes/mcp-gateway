@@ -103,7 +103,21 @@
         "license": { "type": "string", "pattern": "^([^{\\s].*)?$" },
         "publicUrl": { "type": "string" },
         "corsOrigins": { "type": "string" },
-        "logLevel": { "type": "string", "enum": ["", "error", "warn", "info", "debug", "trace"] },
+        "logLevel": {
+          "type": "string",
+          "enum": [
+            "",
+            "fatal",
+            "error",
+            "warn",
+            "info",
+            "debug",
+            "trace",
+            "silent",
+            "log",
+            "verbose"
+          ]
+        },
         "authEmailPassword": { "type": "string" },
         "authSignupMode": { "type": "string", "enum": ["", "open", "invite_only", "closed"] },
         "workspaceMode": { "type": "string", "enum": ["", "single", "multi"] },
