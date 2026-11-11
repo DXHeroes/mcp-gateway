@@ -22,6 +22,20 @@ deployment as soon as possible.
 (`/api/mcp/gateway` or `/api/mcp/<workspace-slug>/gateway`), in both editions: see
 [The gateway endpoint serves each person their own default profile](#the-gateway-endpoint-serves-each-person-their-own-default-profile).
 
+### Workspace integrators (Enterprise Edition managedUsers)
+
+Roll out the supporting backend to **every serving replica before issuing bound service keys**.
+Older binaries do not understand integrator bindings. Keep managed users in single-workspace
+mode. Existing unbound keys and users retain the isolated legacy namespace and existing
+operator catalog/return/write settings; the migration does not assign products or move
+credentials. Create each product under Workspace → Integrators, grant its presets and exact
+return URLs, then issue a key bound to it. Rotate only within the same binding.
+
+Before a production migration, take a fresh database backup and run the change against a copy
+of real data. Record workspace, server, profile, profile-assignment and credential counts before
+and after, then count again after deployment. Synthetic acceptance does not replace that gate.
+See [integrator operations](../users/integrators.md).
+
 ### Synchronous integrator MCP calls use a 20-second execution budget
 
 Enterprise Edition product calls made with a service key now share one 20-second gateway

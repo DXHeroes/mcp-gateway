@@ -103,14 +103,16 @@ still constrain calls. [Airtable setup](https://airtable.com/developers/agents/m
 
 ## Managed integrator connections
 
-Managed presets and the integrator API require Enterprise Edition. Create an
+Managed presets are available in both editions; the integrator API requires Enterprise Edition. Create an
 OAuth managed preset from the selected catalog entry. For HubSpot, GitHub and
 Slack supply the registered application client; for DCR providers leave the client
 empty unless you already have an appropriate registered client. Select scopes
 explicitly where needed, then have each managed user complete a connect link and
 confirmation before invoking tools through its SDK endpoint.
 
-The preset's **integratorWrites** starts off. A write requiring approval is refused
+A bound product needs its own explicit per-preset **integratorWrites** grant under
+[Integrators](integrators.md); that grant starts off. Unbound legacy service keys use the
+preset's legacy **integratorWrites** switch, which also starts off. A write requiring approval is refused
 for a service-key caller until the administrator enables it. An explicitly blocked
 tool stays blocked when the switch is on. Provider-side write consent does not
 change gateway tool policy. Test the actual read/write behavior for each provider
