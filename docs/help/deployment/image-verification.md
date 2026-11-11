@@ -42,8 +42,12 @@ cosign verify "$IMAGE" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 
 docker buildx imagetools inspect "$IMAGE" --format '{{json .SBOM}}' | jq .
-docker buildx imagetools inspect "$IMAGE" --format '{{json .Provenance.SLSA}}' | jq .
+docker buildx imagetools inspect "$IMAGE" --format '{{json .Provenance}}' | jq .
 ```
+
+`$IMAGE` is a multi-platform index, so `.SBOM` and `.Provenance` are keyed by platform
+(`linux/amd64`, `linux/arm64`); `{{json .Provenance.SLSA}}` prints `null`. For one platform use
+`--format '{{json (index .Provenance "linux/amd64").SLSA}}'`.
 
 Require exactly `linux/amd64` and `linux/arm64` image subjects plus their attestation manifests. A
 failed signature, attestation, digest, platform, source-revision, or edition check stops deployment.
@@ -52,9 +56,14 @@ descriptors referenced by that index. The BuildKit attestations are not separate
 Vulnerability scans ignore unfixed findings, so operators should still review the SBOM and current
 advisories under their own policy.
 
-For an offline deployment, verify online first, then mirror the digest and OCI referrers with tooling
-that preserves signatures and attestations. Verify the destination digest again. Copying a tag alone
-does not preserve the complete evidence.
+For an offline deployment, verify online first, then mirror the whole index by digest
+(`skopeo copy --all --preserve-digests`) and its Cosign signature, which is a separate tag next to
+it (`sha256-<digest hex>.sig`). Copying the index alone keeps the digest but not the signature, and
+`cosign verify` then reports `no signatures found`. Verify the destination digest again. Without
+internet access, pass `--trusted-root` with the `trusted_root.json` cosign cached on the connected
+host (`~/.sigstore/root/tuf-repo-cdn.sigstore.dev/targets/trusted_root.json`); otherwise cosign
+tries to refresh Sigstore's trust root and fails. These offline steps were tested with cosign
+v3.1.4; an older cosign may lack `--trusted-root` or cache the trust root elsewhere.
 
 To verify the Docker Hub mirror, swap the repository and keep the digest:
 
@@ -65,6 +74,8 @@ cosign verify "$MIRROR" \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com
 ```
 
-EE verification uses the same process after authenticating to its private Docker Hub repository.
-Offline product-license signatures and image supply-chain signatures are separate mechanisms; an
-EE image contains only public verification keys, never issuer private keys.
+To verify an EE image, first log in to its private Docker Hub repository. The public `release.json` covers only CE, so get the EE digest from the registry with `docker buildx imagetools inspect dxheroes/mcp-gateway-ee:vX.Y.Z`.
+
+Then set `IMAGE` to `dxheroes/mcp-gateway-ee@<digest>` and run the same commands as above.
+
+The license signature and the image signature are separate. An EE image contains only public keys, never private ones.

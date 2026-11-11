@@ -16,7 +16,7 @@ upgrade notes.
 
 ## Prerequisites
 
-- Kubernetes >= 1.25 / OpenShift 4.x
+- Kubernetes >= 1.25 / OpenShift 4.12+
 - An external PostgreSQL database (the chart bundles no DB)
 - A Secret with at least `GATEWAY_ENCRYPTION_KEY` and `DATABASE_URL`
 
@@ -29,15 +29,25 @@ Secrets Operator) whose keys are named after the env vars the app reads:
 oc create secret generic mcp-gateway-secrets \
   --from-literal=GATEWAY_ENCRYPTION_KEY='<32+ random chars, immutable>' \
   --from-literal=DATABASE_URL='postgresql://user:pass@db.internal:5432/mcp' \
-  --from-literal=AUTH_SECRET='<random>'
+  --from-literal=AUTH_SECRET='<random>' \
+  --from-file=GATEWAY_LICENSE=./license.json
 
 helm install mcp-gateway oci://registry-1.docker.io/dxheroes/mcp-gateway --version <X.Y.Z> \
+  --set edition=ee \
   --set image.registry=registry.bank.internal \
+  --set image.repository=mcp-gateway/mcp-gateway-ee \
   --set image.digest=sha256:... \
   --set secret.existingSecret=mcp-gateway-secrets \
   --set route.host=mcp-gateway.apps.bank.internal \
   --set config.publicUrl=https://mcp-gateway.apps.bank.internal
 ```
+
+`edition=ee` belongs to every Enterprise Edition install and upgrade. Without it the chart
+renders the default `edition: ce`: `Recreate` strategy, exactly one replica and no migration hook.
+Without a valid license an EE gateway refuses every configuration change, including new
+accounts. `GATEWAY_LICENSE` above carries the license content; to mount it as a file that renews
+without a restart, set `config.license` to its path instead (Kubernetes and OpenShift deployment
+guide, Step 2b).
 
 ## Quick start (kind / local dev)
 
@@ -53,13 +63,14 @@ helm install mcp charts/mcp-gateway \
 
 | Key | Default | Notes |
 | --- | --- | --- |
+| `edition` | `ce` | `ee` for Enterprise Edition; must match the image |
 | `image.registry` / `image.repository` | `ghcr.io` / `dxheroes/mcp-gateway-ce` | Override for EE or an internal mirror |
 | `image.digest` | `""` | Takes precedence over `tag`; use for air-gapped pinning |
 | `secret.existingSecret` | `""` | Production: name of an external Secret (Vault/ESO) |
 | `secret.create` | `false` | Dev only; renders a Secret from `secret.values` |
 | `route.enabled` / `ingress.enabled` | `true` / `false` | Route is the OpenShift default (edge TLS) |
-| `route.tls.termination` | `edge` | `edge` \| `reencrypt` \| `passthrough` |
-| `migrations.runAsHook` | `true` | Run DB migrations as a pre-install/upgrade Job (avoids multi-replica races) |
+| `route.tls.termination` | `edge` | `edge` \| `reencrypt` \| `passthrough`; only `edge` works as is (the pod serves plain HTTP, no serving certificate) |
+| `migrations.runAsHook` | `true` | EE only: run DB migrations as a pre-install/upgrade Job (avoids multi-replica races) |
 | `networkPolicy.enabled` | `false` | Opt-in default-deny + allowlist |
 | `autoscaling.enabled` / `pdb.enabled` | `false` / `false` | Optional operational controls |
 | `config.*` | `""` | Non-secret env (auth toggles, OIDC IDs, URLs, OTEL); only-if-set |

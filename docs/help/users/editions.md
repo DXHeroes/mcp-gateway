@@ -6,6 +6,6 @@ EE adds ADFS/group role mapping/external JWT, profile and management API keys, d
 
 Trial licenses are issued individually with the same EE features; the signed dates determine duration. Both paid and trial licenses have a full-function grace period after expiry: 30 days unless the license sets another length. Afterwards existing traffic, login, credential renewal, exports and security restrictions/revocations continue; new users, connections and profiles, expanded permissions and other configuration changes are restricted. Renewal lifts restrictions without deleting data. EE never automatically turns into CE.
 
-The application warns every signed-in role from 30 days before expiry and more prominently in the last seven days. During grace it shows the remaining time; afterwards it explains restricted configuration. Administrators can review the license; other users should contact their administrator.
+From 30 to 8 days before expiry, administrators see a short label next to the version in the sidebar. In the last 7 days, every signed-in user sees a warning bar at the top of the page. During grace, the bar shows the time left; after grace, it explains that configuration is restricted. Administrators can review the license; other users should contact their administrator.
 
 Paid EE includes standard support and product onboarding; SLA is agreed separately. Contact hello@dxheroes.io for EE or a trial.
