@@ -49,6 +49,18 @@ Metadata advertises a wider set, including administrative scopes: do not treat
 that advertised list as a recommendation to grant every scope. Verify actual tool
 coverage and granted permissions before replacing a native integration.
 
+Review Pipedrive's actual consent screen on every connect and reconnect. Its
+registered client can request a wider permission set than the scopes in the
+authorization URL, including after the provider adds new tools. Decline a consent
+that exceeds the permissions approved for your integration.
+
+For a narrower client, create a separate managed preset and select its scopes
+before its first authorization, so DCR registers a new client with that set.
+Changing the scope parameter on an existing client's authorization URL does not
+reset its registered permissions. Verify the replacement's company identity,
+required operations and reconnect before retiring the previous connection.
+Future tool releases can require another consent review.
+
 A provider can refuse DCR with `invalid_redirect_uri`. Keep the exact callback,
 record the refusal safely and have the app-registration owner request allowlisting.
 Do not keep registering clients or change the identity to work around it.
