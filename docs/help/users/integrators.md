@@ -19,6 +19,14 @@ integration available until they do.
 
 ## Configure a product
 
+Owners and admins can also keep workspace presets and integrators in a **GatewayConfig v2**
+YAML document. Export it with `GET /api/config/export?apiVersion=v2&format=yaml`, review
+`POST /api/config/plan`, then pass that plan's `approvalToken` with the same document to
+`POST /api/config/apply`. Plans expire after 15 minutes and reject intervening edits. New
+products default to disabled; omitted policy is preserved, submitted grant lists replace
+the whole list, and v2 never prunes existing products or connections. Personal servers and
+profiles continue to use the separate v1 document. Loading a container does not apply YAML.
+
 As a workspace owner or admin, open **Workspace → Integrators** and choose **Add integrator**.
 Members and service keys cannot administer integrators.
 
