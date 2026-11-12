@@ -20,7 +20,7 @@
 2. Verify health
    kubectl (or oc) -n {{ .Release.Namespace }} get pods -l app.kubernetes.io/instance={{ .Release.Name }}
    Liveness:  GET /api/health        (DB-independent, always 200 when up)
-   Readiness: GET /api/health/ready   (503 while the database is unreachable or the served UI build is missing/broken)
+   Readiness: GET /api/health/ready   (503 while the database is unreachable, while an EE replica takes its edition lock again, or while the served UI build is missing/broken)
 
 3. Secrets
 {{- if .Values.secret.existingSecret }}
