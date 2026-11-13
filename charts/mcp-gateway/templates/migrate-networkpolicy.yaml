@@ -1,0 +1,49 @@
+{{- if and .Values.networkPolicy.enabled .Values.migrations.runAsHook (eq .Values.edition "ee") -}}
+{{- /*
+  NetworkPolicy of the migration Job's pods (they carry their own labels, so the app's policy
+  does not select them). A hook with a lower weight than the Job, so it exists before the first
+  migration pod starts: in a namespace that denies everything not allowed, the migration reaches
+  the database already on the first install, when the app's policy does not exist yet.
+  hook-succeeded: Helm deletes it only after every hook of the phase succeeded (Helm 3 and 4),
+  i.e. after the Job. No ingress at all; egress DNS plus migrateRules, or the app's extraRules
+  while migrateRules is empty (the database is already among them).
+*/ -}}
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: {{ include "mcp-gateway.fullname" . }}-migrate
+  labels:
+    {{- include "mcp-gateway.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install,pre-upgrade
+    "helm.sh/hook-weight": "-10"
+    "helm.sh/hook-delete-policy": before-hook-creation,hook-succeeded
+    {{- with .Values.commonAnnotations }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+spec:
+  podSelector:
+    matchLabels:
+      {{- include "mcp-gateway.migrateSelectorLabels" . | nindent 6 }}
+  policyTypes:
+    - Ingress
+    - Egress
+  {{- $rules := .Values.networkPolicy.egress.migrateRules | default .Values.networkPolicy.egress.extraRules }}
+  {{- if or .Values.networkPolicy.egress.allowDNS $rules }}
+  egress:
+    {{- if .Values.networkPolicy.egress.allowDNS }}
+    # DNS resolution (kube-dns / CoreDNS).
+    - to: []
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    {{- end }}
+    {{- with $rules }}
+    {{- toYaml . | nindent 4 }}
+    {{- end }}
+  {{- else }}
+  egress: []
+  {{- end }}
+{{- end }}

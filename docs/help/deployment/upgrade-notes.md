@@ -22,6 +22,10 @@ deployment as soon as possible.
 (`/api/mcp/gateway` or `/api/mcp/<workspace-slug>/gateway`), in both editions: see
 [The gateway endpoint serves each person their own default profile](#the-gateway-endpoint-serves-each-person-their-own-default-profile).
 
+**Action required only for Enterprise Edition Helm deployments whose own policies let the
+migration Job reach the database by the app's labels:** see
+[Helm chart: migration pods carry their own labels](#helm-chart-migration-pods-carry-their-own-labels).
+
 ### Workspace integrators (Enterprise Edition managedUsers)
 
 Roll out the supporting backend to **every serving replica before issuing bound service keys**.
@@ -154,6 +158,30 @@ workspace and answers the caller's own default (`profileName` is `null` when the
 there). `PUT` chooses the caller's own default. `GET /api/settings` no longer lists
 `default_gateway_profile`. In a configuration document, `settings.defaultGatewayProfile` sets the
 applying user's own default, and export writes it only when that user chose one.
+
+### Helm chart: migration pods carry their own labels
+
+**Action required only for Enterprise Edition Helm deployments whose own policies let the
+migration Job reach the database by the app's labels.**
+
+The migration pods now carry these labels:
+
+- `app.kubernetes.io/name: <name>-migrate` (for example `mcp-gateway-migrate`)
+- `app.kubernetes.io/instance: <release>`
+- `app.kubernetes.io/component: migrate`
+
+Before you upgrade, add them to every policy of yours that lets the migration reach the database.
+Otherwise `helm upgrade` fails. If a required anti-affinity rule of yours matches only
+`app.kubernetes.io/instance`, add `app.kubernetes.io/name` to it, or the migration pod cannot
+schedule on nodes that run the gateway.
+
+With `networkPolicy.enabled: true` you need to do nothing. The chart gives the migration pods
+their own NetworkPolicy: DNS plus `networkPolicy.egress.migrateRules`, or
+`networkPolicy.egress.extraRules` while `migrateRules` is empty. The first migration attempt can
+fail while the policy takes effect; Kubernetes retries it.
+
+A failed migration Job stays for its logs. After `helm uninstall`, delete it with
+`kubectl delete job <fullname>-migrate`.
 
 ## 1.5.0 — `toolPrefix` no longer accepts the underscore; the gateway reports itself as `mcp-gateway`
 
@@ -345,8 +373,9 @@ defaults `WORKSPACE_MODE` to `single`, and a deployment that never set the mode 
 until it sets one; 1.5.0 renames every stored tool prefix that contains `_`, and with it every tool
 that server exposes, and changes the name the gateway reports to telemetry, upstream servers,
 PostgreSQL, OAuth providers and its own MCP clients; 1.8.0 refuses a `{ fromEnv }` name the operator
-has not listed, lets only owners and admins plan, apply or create `manage` keys, and serves each
-person their own default profile on the gateway endpoint. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
+has not listed, lets only owners and admins plan, apply or create `manage` keys, serves each
+person their own default profile on the gateway endpoint, and gives the Helm migration pods labels
+of their own. Before 1.0.0 the same was true of 0.3.0, 0.4.0, 0.6.0 and 0.7.0.
 
 That is what makes the moving tags safe to pin:
 

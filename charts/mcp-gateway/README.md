@@ -70,8 +70,11 @@ helm install mcp charts/mcp-gateway \
 | `secret.create` | `false` | Dev only; renders a Secret from `secret.values` |
 | `route.enabled` / `ingress.enabled` | `true` / `false` | Route is the OpenShift default (edge TLS) |
 | `route.tls.termination` | `edge` | `edge` \| `reencrypt` \| `passthrough`; only `edge` works as is (the pod serves plain HTTP, no serving certificate) |
-| `migrations.runAsHook` | `true` | EE only: run DB migrations as a pre-install/upgrade Job (avoids multi-replica races) |
-| `networkPolicy.enabled` | `false` | Opt-in default-deny + allowlist |
+| `migrations.runAsHook` | `true` | EE only: run DB migrations as a pre-install/upgrade Job (avoids multi-replica races). Its pods are labelled `<name>-migrate` and get the same `extraEnv`, `extraVolumes` and `extraVolumeMounts` as the app pods |
+| `networkPolicy.enabled` | `false` | Opt-in default-deny + allowlist; in EE with the migration hook also a hook NetworkPolicy for the migration pods |
+| `networkPolicy.egress.migrateRules` | `[]` | Egress of the migration pods besides DNS; empty = `networkPolicy.egress.extraRules` |
+| `strategy` | `{}` | EE only: Deployment `spec.strategy`; empty = Kubernetes default `RollingUpdate`. `maxSurge: 0`, `maxUnavailable: 1` needs no spare node |
+| `preStopDrainSeconds` / `terminationGracePeriodSeconds` | `0` / `30` | Drain delay before SIGTERM (10 with one-pod-at-a-time) and the grace period it counts against |
 | `autoscaling.enabled` / `pdb.enabled` | `false` / `false` | Optional operational controls |
 | `config.*` | `""` | Non-secret env (auth toggles, OIDC IDs, URLs, OTEL); only-if-set |
 

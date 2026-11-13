@@ -6,6 +6,9 @@ separate OAuth and PAT variants; Attio, Notion and Slack retain their own guides
 Each connection should use the person's own provider account. Provider permissions
 and gateway tool permissions both apply.
 
+For the independently deployed Tasks, Contacts, Outlook, Teams and internal Slack
+bridge offers, use [DX Heroes OAuth connectors](./oauth-connectors.md).
+
 | Preset | Server | Client setup |
 | --- | --- | --- |
 | Pipedrive | `https://mcp.pipedrive.ai/mcp` | OAuth discovery and DCR; callback eligibility must be verified |

@@ -4,6 +4,9 @@
 {{- if and (eq .Values.edition "ce") (or (ne (int .Values.replicaCount) 1) .Values.autoscaling.enabled) -}}
 {{- fail "CE requires replicaCount=1 and autoscaling.enabled=false" -}}
 {{- end -}}
+{{- if and (eq .Values.edition "ce") .Values.strategy -}}
+{{- fail "strategy is EE only: CE runs a single replica and always replaces it with Recreate" -}}
+{{- end -}}
 {{- include "mcp-gateway.validateRouting" . -}}
 apiVersion: apps/v1
 kind: Deployment
@@ -19,6 +22,10 @@ spec:
   {{- if eq .Values.edition "ce" }}
   strategy:
     type: Recreate
+  {{- else if .Values.strategy }}
+  # Without `strategy` none is rendered and the cluster default applies, as before.
+  strategy:
+    {{- toYaml .Values.strategy | nindent 4 }}
   {{- end }}
   {{- if not .Values.autoscaling.enabled }}
   replicas: {{ .Values.replicaCount }}
@@ -48,6 +55,7 @@ spec:
       automountServiceAccountToken: {{ .Values.serviceAccount.automountServiceAccountToken }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      terminationGracePeriodSeconds: {{ .Values.terminationGracePeriodSeconds }}
       containers:
         - name: {{ include "mcp-gateway.name" . }}
           image: {{ include "mcp-gateway.image" . }}
@@ -89,6 +97,14 @@ spec:
           {{- with .Values.startupProbe }}
           startupProbe:
             {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if gt (int .Values.preStopDrainSeconds) 0 }}
+          # Keep serving while the router/Service drops the terminating pod, so
+          # in-flight requests do not end in 502. Counts against the grace period.
+          lifecycle:
+            preStop:
+              exec:
+                command: ["sleep", "{{ int .Values.preStopDrainSeconds }}"]
           {{- end }}
           resources:
             {{- toYaml .Values.resources | nindent 12 }}

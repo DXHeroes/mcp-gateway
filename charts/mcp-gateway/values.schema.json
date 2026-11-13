@@ -120,8 +120,15 @@
         },
         "authEmailPassword": { "type": "string" },
         "authSignupMode": { "type": "string", "enum": ["", "open", "invite_only", "closed"] },
+        "authRequireMfa": { "type": "string", "enum": ["", "off", "privileged", "all"] },
+        "databasePoolSize": {
+          "type": ["integer", "string"],
+          "minimum": 1,
+          "pattern": "^([1-9][0-9]*)?$"
+        },
         "workspaceMode": { "type": "string", "enum": ["", "single", "multi"] },
         "workspaceConsolidateKeepId": { "type": "string" },
+        "workspaceConsolidateKeepSlug": { "type": "string" },
         "workspaceConsolidateConfirm": { "type": "string", "enum": ["", "DELETE_OTHER_WORKSPACES"] },
         "tenancyMode": { "type": "string", "enum": ["", "multi_tenant", "single_tenant"] },
         "googleClientId": { "type": "string" },
@@ -134,7 +141,7 @@
         "adfsDisplayName": { "type": "string" },
         "ssoRoleMappingProviders": { "type": "string" },
         "ssoGroupRoleMapping": { "type": "string" },
-        "ssoDefaultRole": { "type": "string", "enum": ["", "admin", "member"] },
+        "ssoDefaultRole": { "type": "string", "enum": ["", "admin", "member", "end_user"] },
         "ssoGroupsClaim": { "type": "string" },
         "mcpAllowPrivateNetworkTargets": { "type": "string", "enum": ["", "true", "false"] },
         "resendFrom": { "type": "string" },
@@ -196,6 +203,23 @@
     "livenessProbe": { "type": "object" },
     "readinessProbe": { "type": "object" },
     "startupProbe": { "type": "object" },
+    "strategy": {
+      "type": "object",
+      "properties": {
+        "type": { "type": "string", "enum": ["RollingUpdate", "Recreate"] },
+        "rollingUpdate": {
+          "type": "object",
+          "properties": {
+            "maxSurge": { "type": ["integer", "string"] },
+            "maxUnavailable": { "type": ["integer", "string"] }
+          },
+          "additionalProperties": false
+        }
+      },
+      "additionalProperties": false
+    },
+    "preStopDrainSeconds": { "type": "integer", "minimum": 0 },
+    "terminationGracePeriodSeconds": { "type": "integer", "minimum": 0 },
     "pdb": {
       "type": "object",
       "properties": {
@@ -225,7 +249,8 @@
           "type": "object",
           "properties": {
             "allowDNS": { "type": "boolean" },
-            "extraRules": { "type": "array" }
+            "extraRules": { "type": "array" },
+            "migrateRules": { "type": "array" }
           },
           "additionalProperties": false
         }

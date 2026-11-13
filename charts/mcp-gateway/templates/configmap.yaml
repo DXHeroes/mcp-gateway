@@ -1,3 +1,6 @@
+{{- if and .Values.config.workspaceConsolidateKeepId .Values.config.workspaceConsolidateKeepSlug -}}
+{{- fail "set config.workspaceConsolidateKeepId or config.workspaceConsolidateKeepSlug, not both: the gateway refuses to start with both" -}}
+{{- end -}}
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -25,17 +28,26 @@ data:
   {{- with .Values.config.logLevel }}
   LOG_LEVEL: {{ . | quote }}
   {{- end }}
+  {{- with .Values.config.databasePoolSize }}
+  DATABASE_POOL_SIZE: {{ . | quote }}
+  {{- end }}
   {{- with .Values.config.authEmailPassword }}
   AUTH_EMAIL_PASSWORD: {{ . | quote }}
   {{- end }}
   {{- with .Values.config.authSignupMode }}
   AUTH_SIGNUP_MODE: {{ . | quote }}
   {{- end }}
+  {{- with .Values.config.authRequireMfa }}
+  AUTH_REQUIRE_MFA: {{ . | quote }}
+  {{- end }}
   {{- with .Values.config.workspaceMode }}
   WORKSPACE_MODE: {{ . | quote }}
   {{- end }}
   {{- with .Values.config.workspaceConsolidateKeepId }}
   WORKSPACE_CONSOLIDATE_KEEP_ID: {{ . | quote }}
+  {{- end }}
+  {{- with .Values.config.workspaceConsolidateKeepSlug }}
+  WORKSPACE_CONSOLIDATE_KEEP_SLUG: {{ . | quote }}
   {{- end }}
   {{- with .Values.config.workspaceConsolidateConfirm }}
   WORKSPACE_CONSOLIDATE_CONFIRM: {{ . | quote }}

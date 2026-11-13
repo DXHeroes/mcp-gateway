@@ -28,8 +28,7 @@ spec:
   template:
     metadata:
       labels:
-        {{- include "mcp-gateway.selectorLabels" . | nindent 8 }}
-        app.kubernetes.io/component: migrate
+        {{- include "mcp-gateway.migrateSelectorLabels" . | nindent 8 }}
     spec:
       restartPolicy: Never
       {{- with .Values.imagePullSecrets }}
@@ -75,6 +74,11 @@ spec:
               mountPath: {{ .Values.writableVolumes.home.mountPath }}
             - name: tmp
               mountPath: {{ .Values.writableVolumes.tmp.mountPath }}
+            # Same extra mounts as the app pods, e.g. the internal CA that the
+            # database certificate is signed with (NODE_EXTRA_CA_CERTS / SSL_CERT_FILE).
+            {{- with .Values.extraVolumeMounts }}
+            {{- toYaml . | nindent 12 }}
+            {{- end }}
       volumes:
         - name: home
           emptyDir:
@@ -82,6 +86,9 @@ spec:
         - name: tmp
           emptyDir:
             sizeLimit: {{ .Values.writableVolumes.tmp.sizeLimit }}
+        {{- with .Values.extraVolumes }}
+        {{- toYaml . | nindent 8 }}
+        {{- end }}
       {{- with .Values.nodeSelector }}
       nodeSelector:
         {{- toYaml . | nindent 8 }}

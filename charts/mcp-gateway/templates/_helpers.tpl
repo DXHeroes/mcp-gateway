@@ -52,6 +52,18 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 {{- end }}
 
 {{/*
+Labels of the migration Job's pods. Deliberately NOT the selector labels: pods carrying those
+would be matched by the Deployment selector, the Service, the PDB and any required pod
+anti-affinity on them, so with one replica per node the Job could not schedule. The name is
+cut to 55 characters so "-migrate" always fits into the 63-character label value.
+*/}}
+{{- define "mcp-gateway.migrateSelectorLabels" -}}
+app.kubernetes.io/name: {{ printf "%s-migrate" (include "mcp-gateway.name" . | trunc 55 | trimSuffix "-") }}
+app.kubernetes.io/instance: {{ .Release.Name }}
+app.kubernetes.io/component: migrate
+{{- end }}
+
+{{/*
 ServiceAccount name to use.
 */}}
 {{- define "mcp-gateway.serviceAccountName" -}}

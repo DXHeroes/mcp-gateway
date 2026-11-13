@@ -1,5 +1,8 @@
 # Microsoft 365
 
+For the independently deployed Outlook and Microsoft Teams connectors, including
+Outlook.com accounts, see [DX Heroes OAuth connectors](./oauth-connectors.md#outlook-mail-and-calendar).
+
 Three presets (Teams, SharePoint and OneDrive) connect the gateway to Microsoft's official Work IQ
 MCP servers. One Entra app registration covers all three.
 

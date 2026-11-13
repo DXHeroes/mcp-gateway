@@ -128,18 +128,26 @@ config:
   publicUrl: ""
   corsOrigins: ""
   logLevel: ""
+  # PostgreSQL connections each replica may open (a positive whole number).
+  # Empty = 10. Keep replicas x this under the database's connection limit.
+  databasePoolSize: ""
   # Sign-in method toggles. Switchable per customer.
   authEmailPassword: "" # "false" to disable email/password login
   # Gates new-account creation for BOTH email/password and SSO (Google/Microsoft/ADFS).
   authSignupMode: "" # open | invite_only | closed
+  # Two-factor sign-in the gateway enforces. Empty = off.
+  authRequireMfa: "" # off | privileged (owners and admins) | all
   # Workspace mode. The gateway defaults to one workspace; set `multi` only
   # for an intentional multi-workspace deployment. Existing multi-workspace
   # databases must set this explicitly after upgrading.
   workspaceMode: "" # single (default) | multi
-  # One-shot, destructive consolidation. Keep the immutable workspace ID shown
-  # on the Workspace page and use the exact confirmation literal. The gateway
-  # moves members to the survivor and deletes their MCP connections/credentials.
+  # One-shot, destructive consolidation: every workspace except the survivor is
+  # deleted. Name the survivor by its immutable ID (shown on the Workspace page)
+  # or by its slug, never both, and use the exact confirmation literal. The
+  # gateway moves the deleted workspaces' members to the survivor and keeps
+  # their MCP connections.
   workspaceConsolidateKeepId: ""
+  workspaceConsolidateKeepSlug: ""
   workspaceConsolidateConfirm: "" # DELETE_OTHER_WORKSPACES
   # Deprecated compatibility alias. Prefer workspaceMode; never set both to
   # different values because the gateway rejects a conflicting deployment.
@@ -157,7 +165,7 @@ config:
   # SSO group->role mapping (owner never assigned/touched; re-synced every login).
   ssoRoleMappingProviders: "" # e.g. "adfs" or "microsoft"
   ssoGroupRoleMapping: "" # e.g. "MCP-GW-Admins:admin,MCP-GW-Users:member"
-  ssoDefaultRole: "" # default: member
+  ssoDefaultRole: "" # admin | member (default) | end_user
   ssoGroupsClaim: "" # default: groups
   # Outbound MCP network policy. Private-network MCP targets (loopback,
   # RFC 1918, CGNAT, ULA) are allowed by default - internal servers are the
@@ -274,6 +282,27 @@ startupProbe:
   # 5s * 60 = up to 5 minutes for migrations + MCP discovery on first boot.
   failureThreshold: 60
 
+# -- How an upgrade replaces the pods (Deployment spec.strategy), EE only. Empty:
+# the Kubernetes default (RollingUpdate with an extra pod). With a required
+# one-replica-per-node anti-affinity and no spare node, replace one pod at a
+# time instead:
+#   strategy:
+#     type: RollingUpdate
+#     rollingUpdate:
+#       maxSurge: 0
+#       maxUnavailable: 1
+# CE always uses Recreate and refuses this value.
+strategy: {}
+
+# -- Seconds a stopping pod keeps serving before it gets SIGTERM, so the
+# router stops sending it requests first. 0 = off. Set 10 when pods are
+# replaced while the others serve traffic, e.g. with the one-pod-at-a-time
+# strategy above. Counts against terminationGracePeriodSeconds.
+preStopDrainSeconds: 0
+# -- Seconds Kubernetes waits for a stopping pod before killing it (30 is the
+# Kubernetes default). Raise it together with a longer preStopDrainSeconds.
+terminationGracePeriodSeconds: 30
+
 # -- PodDisruptionBudget (enabled when replicaCount > 1 is sensible).
 # WARNING: minAvailable: 1 with replicaCount: 1 blocks all voluntary disruptions
 # (node drains, Helm upgrades). Only enable when replicaCount >= 2.
@@ -305,6 +334,11 @@ networkPolicy:
     allowDNS: true
     # Extra egress rules appended verbatim (e.g. DB, OIDC issuer, MCP targets).
     extraRules: []
+    # Egress rules of the migration Job's own NetworkPolicy (EE with
+    # migrations.runAsHook), e.g. only the database. Empty: the migration gets
+    # extraRules above. DNS follows allowDNS. The migration pods are labelled
+    # app.kubernetes.io/name: <name>-migrate.
+    migrateRules: []
 
 # -- Database migrations. true: run as a pre-install/pre-upgrade Helm hook Job
 # (recommended for >1 replica — avoids every pod racing to migrate). The app

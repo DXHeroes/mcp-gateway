@@ -1,5 +1,8 @@
 # Google Workspace
 
+For the separately deployed Google Tasks and writable Contacts offers, see
+[DX Heroes OAuth connectors](./oauth-connectors.md#google-tasks-and-contacts).
+
 Eight presets (Gmail, Drive, Calendar, Docs, Sheets, Slides, Chat and People) connect the gateway
 to Google's official Workspace MCP servers. One Google Cloud project and one dedicated MCP OAuth
 client cover all eight.

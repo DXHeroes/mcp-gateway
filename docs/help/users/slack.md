@@ -1,5 +1,9 @@
 # Slack
 
+The separately deployed internal Slack Web API bridge has its own
+[OAuth connector setup](./oauth-connectors.md#slack-internal-bridge), scope set and
+distribution gate. The community preset below connects to Slack's official server.
+
 There are two ways to connect Slack. Pick one before you start.
 
 | | **A. Community preset** | **B. REST API (OpenAPI)** |
