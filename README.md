@@ -12,7 +12,7 @@ Community Edition is for developers and platform teams who manage access to shar
 
 ## See it
 
-https://github.com/user-attachments/assets/04770b41-2170-40c1-9413-19b44d9f5587
+https://github.com/user-attachments/assets/ec23dde7-b4e8-40ba-b7fb-8f553e8807be
 
 [Download the walkthrough (MP4 with English subtitles)](docs/media/walkthrough.mp4)
 
