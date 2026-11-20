@@ -1,4 +1,158 @@
-# DXH Gateway
+# DXH Gateway for shared MCP tools
+
+Give AI clients the MCP tools they need and see which tools they call.
+
+Community Edition is for developers and platform teams who manage access to shared MCP servers.
+
+## The problem
+
+- A new AI client means setting up the same servers again.
+- You want an assistant to look up tickets, with someone approving any edits it makes.
+- After an unexpected change, you need to find out who called the tool and from which AI client.
+
+## See it
+
+![Gateway walkthrough showing connected MCP servers, profiles, and Activity filtered to tool-list requests](docs/media/walkthrough.gif)
+
+[Download the walkthrough (MP4)](docs/media/walkthrough.mp4)
+
+![MCP Servers page listing ByzData and Context7 with their connection status and tool counts](docs/media/mcp-servers.png)
+
+See which MCP servers are connected and how many tools they offer.
+
+![Profiles page showing two ready profiles and the gateway endpoint](docs/media/profiles.png)
+
+Give AI clients the tools they need by connecting them to a profile.
+
+![Activity page showing successful tool-list requests from three simulated AI clients](docs/media/activity.png)
+
+See which client requested tools and which profile handled the request.
+
+## What you get
+
+- Set up each MCP server once on your own gateway and reuse the connection across clients.
+- Use profiles to give each client a set of tools suited to its work.
+- Block individual tools or require approval before a call runs.
+- Inspect recent calls in Activity to see which client called which tool and on which server.
+
+## Why we built it
+
+If something goes wrong, I want to be able to look up which MCP server we called and see
+what came back. We built DXH Gateway to give our team that record.
+
+Using Gateway, we measured 6 billion tokens and 135,000 lines of code over 30 days of our own work.
+
+Prokop Simek
+
+## Run it in 5 minutes
+
+You need Docker with Compose v2, `curl` and `openssl` on a Mac or a Linux machine, and
+[Claude Code](https://code.claude.com/docs/en/overview) for the last step. The first
+step also downloads the gateway and PostgreSQL images; the five minutes do not include that.
+
+1. Install the gateway:
+
+   ```sh
+   curl -fsSL https://raw.githubusercontent.com/DXHeroes/mcp-gateway/main/install.sh | sh
+   ```
+
+   Answer `y` to accept the [CE terms](LICENSE-CE.txt). The installer writes `mcp-gateway/.env`
+   with generated secrets, starts the gateway and prints
+   `DXH Gateway is running at http://localhost:3001.` followed by the next steps.
+
+2. Open http://localhost:3001, click **Sign up** and create an account. The first account owns
+   the gateway. You land on the Dashboard, where the **Gateway endpoint** card shows
+   `http://localhost:3001/api/mcp/workspace/gateway`.
+
+3. Add a first MCP server: on **MCP Servers → Catalog**, click **Add to my servers** on
+   **ByzData**. It reads public Czech company registers and needs no API key. Its page shows
+   **Connected** and **Server ready (no API key required)**, and the **Tools** tab lists 9 tools.
+
+4. Put the server into the profile the endpoint serves: on **Profiles**, click **Edit** on
+   `default`, select **ByzData** and click **Save changes**. The Dashboard now shows the `default`
+   profile as **Ready at last check** with servers `1/1`.
+
+5. Connect Claude Code and sign in:
+
+   ```sh
+   claude mcp add --transport http mcp-gateway http://localhost:3001/api/mcp/workspace/gateway
+   claude mcp login mcp-gateway
+   claude mcp list
+   ```
+
+   `claude mcp login` opens the gateway's authorization page in your browser. In the browser where
+   you created the account, it goes straight to **Authentication successful**. The last command
+   then prints:
+
+   ```text
+   mcp-gateway: http://localhost:3001/api/mcp/workspace/gateway (HTTP) - ✔ Connected
+   ```
+
+   In a signed-in Claude Code session, open `/mcp`, select `mcp-gateway` and choose
+   **View tools** to see the nine ByzData tools, including `search_company` and `get_company`.
+
+   To print the same list in your terminal, run [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector)
+   with a supported Node.js version such as 24.22.1.
+
+   ```sh
+   npx -y @modelcontextprotocol/inspector@2.16.0 --cli \
+     http://localhost:3001/api/mcp/workspace/gateway --transport http --method tools/list
+   ```
+
+   Complete the gateway authorization in the browser where you created the account. The command
+   prints a JSON `tools` array with the nine ByzData tool names.
+
+### What next
+
+- [Before you go to production](#before-you-go-to-production) says how to close the sign-up and
+  serve the gateway over HTTPS. The installer's `--domain` option does the HTTPS part, see
+  [Install with one command](#install-with-one-command).
+- [Connect an AI client](#connect-an-ai-client) has the configuration for other clients that
+  support remote MCP servers over HTTP.
+- [Get started](docs/help/users/introduction/quick-start.md) covers profiles, tool permissions and
+  approvals.
+- [Docker Compose](#quick-start-with-docker-compose) and [`docker run`](#quick-start-with-docker-run)
+  install the gateway without the installer.
+- [Update, stop, remove](#update-stop-remove) covers upgrades and removal.
+
+## Community vs. Enterprise
+
+| | Community Edition (CE) | Enterprise Edition (EE) |
+| --- | --- | --- |
+| Use | Free for internal production in companies with up to 50 employees. Free for non-production evaluation and testing at any company size. | Paid or trial license |
+| Active accounts | Up to 25 across the installation, counting all roles | Capacity set by the signed license |
+| Workspaces | One | Multiple |
+| Saved REST/OpenAPI connections | One, even if disabled | No edition limit |
+| Deployment | One running gateway instance | Multiple gateway replicas |
+| Activity and audit history | Up to seven days | Longer retention |
+| Authentication | Password, Google and Microsoft sign-in, plus MFA | Adds AD FS sign-in, directory group-to-role mapping and external JWTs |
+| API access | OAuth for MCP clients | Adds profile and management API keys |
+| Configuration | Configuration export | Adds configuration as code with plan and apply |
+| Monitoring | Health and basic metrics | Adds log export, alerts and automatic checks for tool and specification drift |
+
+The CE terms call a workspace an organization. Count employees at your company and at any company
+that controls it, is controlled by it or is under common control. CE sets no commercial quota on
+MCP connections, profiles or tool calls. See the [CE terms](LICENSE-CE.txt).
+
+DXH Gateway verifies paid and trial EE licenses offline. See [editions and licenses](docs/help/users/editions.md).
+For Enterprise Edition or a trial, [contact DX Heroes](https://dxheroes.io/contact).
+
+For support or to report a bug, email [hello@dxheroes.io](mailto:hello@dxheroes.io).
+
+## What we are working on
+
+We plan to add these capabilities.
+
+- Give each user group access to the MCP connections and tools it needs (EE only).
+- Let users narrow their own tool list at the shared workspace URL by switching off profiles.
+- Update Gateway group membership from your directory at sign-in (EE only).
+- Manage workspace groups and their tool access in a configuration file you can review and apply (EE only).
+
+Last updated on 19 November 2026.
+
+See [Releases](https://github.com/DXHeroes/mcp-gateway/releases).
+
+---
 
 Self-hosted governance for MCP tools: connect your MCP servers once, group them into profiles, and
 give every AI client exactly the tools it needs, with permissions, approvals and an audit trail.
@@ -116,10 +270,10 @@ Signatures belong to the repository they were published in, so verify the refere
 ## Connect an AI client
 
 The Dashboard shows the gateway endpoint, which serves your default profile. On a new installation
-it is `http://localhost:3001/api/mcp/organization/gateway`:
+it is `http://localhost:3001/api/mcp/workspace/gateway`:
 
 ```sh
-claude mcp add --transport http mcp-gateway http://localhost:3001/api/mcp/organization/gateway
+claude mcp add --transport http mcp-gateway http://localhost:3001/api/mcp/workspace/gateway
 ```
 
 Other clients that support remote MCP servers over HTTP use the same URL:
@@ -127,7 +281,7 @@ Other clients that support remote MCP servers over HTTP use the same URL:
 ```json
 {
   "mcpServers": {
-    "mcp-gateway": { "type": "http", "url": "http://localhost:3001/api/mcp/organization/gateway" }
+    "mcp-gateway": { "type": "http", "url": "http://localhost:3001/api/mcp/workspace/gateway" }
   }
 }
 ```
@@ -158,16 +312,6 @@ for profiles, tool permissions and approvals.
 
 The full procedure, Helm (Kubernetes/OpenShift) and upgrades are in
 [installation](docs/help/deployment/installation.md).
-
-## Editions
-
-CE includes 25 active accounts, one organization, one REST/OpenAPI connection and one active gateway
-instance. MCP connections, profiles and tool calls have no commercial quota. Enterprise Edition (EE)
-adds enterprise identity, automation, log export, longer retention and multiple gateway replicas,
-with offline-verified paid or trial licenses. See [editions](docs/help/users/editions.md).
-
-Support and EE/trial requests: hello@dxheroes.io. Report public issues without credentials or
-private tool results.
 
 ## Claude marketplace
 
