@@ -46,9 +46,11 @@ Prokop Simek
 
 ## Run it in 5 minutes
 
-You need Docker with Compose v2, `curl` and `openssl` on a Mac or a Linux machine, and
-[Claude Code](https://code.claude.com/docs/en/overview) for the last step. The first
-step also downloads the gateway and PostgreSQL images; the five minutes do not include that.
+You need Docker with Compose v2, `curl` and `openssl` on a Mac or a Linux machine. For step 5,
+use either [Claude Code](https://code.claude.com/docs/en/overview) signed in to your Claude
+account or [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector) with Node.js and
+`npx`. MCP Inspector works without a Claude account. Allow extra time for the first download of
+the gateway and PostgreSQL images.
 
 1. Install the gateway:
 
@@ -72,7 +74,9 @@ step also downloads the gateway and PostgreSQL images; the five minutes do not i
    `default`, select **ByzData** and click **Save changes**. The Dashboard now shows the `default`
    profile as **Ready at last check** with servers `1/1`.
 
-5. Connect Claude Code and sign in:
+5. Verify the profile's tools with either client.
+
+   To use **Claude Code**, run these commands after signing in.
 
    ```sh
    claude mcp add --transport http mcp-gateway http://localhost:3001/api/mcp/workspace/gateway
@@ -91,8 +95,7 @@ step also downloads the gateway and PostgreSQL images; the five minutes do not i
    In a signed-in Claude Code session, open `/mcp`, select `mcp-gateway` and choose
    **View tools** to see the nine ByzData tools, including `search_company` and `get_company`.
 
-   To print the same list in your terminal, run [MCP Inspector](https://modelcontextprotocol.io/docs/tools/inspector)
-   with a supported Node.js version such as 24.22.1.
+   To use **MCP Inspector**, run this command with a supported Node.js version such as 24.22.1.
 
    ```sh
    npx -y @modelcontextprotocol/inspector@2.16.0 --cli \
@@ -305,7 +308,14 @@ for profiles, tool permissions and approvals.
 
 - Put the gateway behind a TLS reverse proxy and set `PUBLIC_URL` to its address (the installer's
   `--domain` does both with Caddy). The defaults publish port 3001 on loopback only.
-- After the owner account exists, set `AUTH_SIGNUP_MODE=invite_only` and restart.
+- After the owner account exists, close public sign-up.
+
+  - For **Docker Compose**, set `AUTH_SIGNUP_MODE=invite_only` in the installation's `.env` and
+    run `docker compose up -d --wait` from that directory.
+  - For **`docker run`**, set `AUTH_SIGNUP_MODE=invite_only` in `gateway.env`, run
+    `docker rm -f mcp-gateway` and repeat the gateway container command from
+    [Quick start with `docker run`](#quick-start-with-docker-run). Keep the PostgreSQL container
+    and its data volume.
 - Pin the image by digest from `release.json` and verify its signature: see
   [image verification](docs/help/deployment/image-verification.md).
 - Back up the database and `.env` together.
