@@ -12,7 +12,7 @@ Community Edition is for developers and platform teams who manage access to shar
 
 ## See it
 
-![Gateway walkthrough showing connected MCP servers, profiles, and Activity filtered to tool-list requests](docs/media/walkthrough.gif)
+https://github.com/user-attachments/assets/839e3eea-6bd9-488e-881f-fa0ab68a378e
 
 [Download the walkthrough (MP4)](docs/media/walkthrough.mp4)
 
