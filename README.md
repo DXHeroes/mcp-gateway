@@ -12,9 +12,9 @@ Community Edition is for developers and platform teams who manage access to shar
 
 ## See it
 
-https://github.com/user-attachments/assets/839e3eea-6bd9-488e-881f-fa0ab68a378e
+https://github.com/user-attachments/assets/04770b41-2170-40c1-9413-19b44d9f5587
 
-[Download the walkthrough (MP4)](docs/media/walkthrough.mp4)
+[Download the walkthrough (MP4 with English subtitles)](docs/media/walkthrough.mp4)
 
 ![MCP Servers page listing ByzData and Context7 with their connection status and tool counts](docs/media/mcp-servers.png)
 
