@@ -96,6 +96,10 @@ and the signing-in user's permissions still apply. [Linear MCP](https://linear.a
 
 ## Atlassian
 
+In **Servers → Catalog**, search for **Jira** to find **Atlassian (Jira and Confluence)**.
+If your workspace already has a per-user Atlassian connection, open **My connections**
+to authorize your account.
+
 The preset uses v2 with `tools=all` so Jira and Confluence tools are exposed as
 individual tools. Keep that query parameter when using gateway tool policies.
 Discovery follows the v2 protected-resource document to its authorization server;
