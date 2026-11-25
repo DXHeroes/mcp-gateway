@@ -65,6 +65,19 @@ still expires or stops working when revoked or when its creator loses the requir
 SDK 1.7.0's public request/response shapes remain supported unchanged; confirmed managed
 connections keep `keepAlive=true`.
 
+## Account pins
+
+A managed preset whose OAuth scopes ask for `openid` pins each integrator connection to the
+provider account it was authorized with. A reconnect with another account is refused with
+`account_mismatch`, and the connection keeps its credential.
+
+Changing or clearing the preset's OAuth client ID releases the pins of all its connections,
+from the UI and from an applied GatewayConfig v2 document alike; each connection takes the
+account of its next reconnect. Nothing else releases a pin. If you remove `openid` from the
+scopes, or the provider stops returning an `id_token`, every reconnect of a pinned connection
+ends with `provider_error` until the client ID changes or the connection is deleted. A scope
+change keeps the pins on purpose: the gateway refuses rather than swap the account unchecked.
+
 ## Restrict or disable
 
 Removing a preset grant refuses subsequent access to that preset, including the next request
