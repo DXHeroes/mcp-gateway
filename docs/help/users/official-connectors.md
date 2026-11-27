@@ -11,6 +11,7 @@ bridge offers, use [DX Heroes OAuth connectors](./oauth-connectors.md).
 
 | Preset | Server | Client setup |
 | --- | --- | --- |
+| Toggl Focus (US / EU) | `https://focus.toggl.com/mcp` or `https://focus.eu.toggl.com/mcp` | Automatic OAuth with the gateway’s public HTTPS client metadata |
 | Pipedrive | `https://mcp.pipedrive.ai/mcp` | OAuth discovery and DCR; callback eligibility must be verified |
 | HubSpot | `https://mcp.hubspot.com` | Pre-register a HubSpot MCP connector; PKCE required |
 | Linear | `https://mcp.linear.app/mcp` | OAuth discovery and DCR |
@@ -37,6 +38,12 @@ DCR creates the OAuth client during authorization; it does not register a provid
 user account or guarantee that the provider accepts your gateway callback. Use
 DXH Gateway's own client identity. Do not impersonate another MCP client to bypass
 provider admission restrictions.
+
+## Moving from Toggl Track to Focus
+
+Choose **Toggl Focus (EU)** if your Toggl address includes `eu.toggl.com`, or **Toggl Focus (US)** for `focus.toggl.com`. Open the gateway at its configured public HTTPS address, save the preset and sign in to Toggl. The Toggl organization administrator can enable MCP in Toggl’s **Admin settings → Connections → MCP**.
+
+Add the new connection to your profile and list your Toggl workspaces to confirm the account. Focus exposes its own tools, so update workflows that call Track tools by name before removing the Track connection. Existing Track connections use their original API tokens. If the gateway moves to another public address, create a new Focus connection (and a new managed preset if applicable) and authorize it at the new address. [Toggl MCP setup](https://docs.toggl.com/toggl-mcp-and-cli).
 
 ## Pipedrive
 
